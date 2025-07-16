@@ -97,7 +97,7 @@ class BleRpmManager(
             0x51.toByte(), // Start byte
             0x71.toByte(), // Command for reading weight data
             0x02.toByte(), // Data for device type, etc.
-            0x01.toByte(), // Additional data byte
+            0x00.toByte(), // Additional data byte
             0x00.toByte(), // Placeholder data byte
             0xA3.toByte(), // Stop byte
             0x00.toByte()  // Placeholder for checksum
