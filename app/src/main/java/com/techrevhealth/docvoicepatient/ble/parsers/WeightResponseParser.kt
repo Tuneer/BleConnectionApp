@@ -36,6 +36,7 @@ class WeightResponseParser(
             0x24 -> handle0x24DeviceModel(data, gatt, characteristic)
             0x27 -> handle0x27SerialPart1(data, gatt, characteristic)
             0x28 -> handle0x28SerialPart2(data, gatt, characteristic)
+            0x4F -> handle0x4FBattery(data, gatt, characteristic)
             0x71 -> handle0x71WeightData(data)
         }
     }
@@ -118,6 +119,26 @@ class WeightResponseParser(
         )
         Log.d(TAG, "Complete Serial: $completeSerial")
         
+        // Send 0x4F to try get battery info
+        Handler(Looper.getMainLooper()).postDelayed({
+            writeCharacteristic(WeightCommands.readBattery(), gatt, characteristic)
+        }, 700)
+    }
+    
+    private fun handle0x4FBattery(data: ByteArray, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
+        Log.d(TAG, "0x4F: Battery (EXPERIMENTAL)")
+        try {
+            val battery = data[2].toInt() and 0xFF
+            val firmware = data[4].toInt() and 0xFF
+            
+            accumulatedData = accumulatedData?.copy(battery = battery, firmware = firmware.toString())
+                ?: accumulatedData
+            
+            Log.d(TAG, "Battery: $battery%, Firmware: $firmware")
+        } catch (e: Exception) {
+            Log.w(TAG, "0x4F failed (may not be supported): ${e.message}")
+        }
+        
         // Send 0x71 to get weight data
         Handler(Looper.getMainLooper()).postDelayed({
             writeCharacteristic(WeightCommands.readWeightData(), gatt, characteristic)
@@ -193,6 +214,8 @@ class WeightResponseParser(
             Log.d(TAG, "Measure Time: ${accumulatedData?.measureTime}")
             Log.d(TAG, "Model: ${accumulatedData?.deviceModel}")
             Log.d(TAG, "Serial: ${accumulatedData?.serialNumber}")
+            Log.d(TAG, "Battery: ${accumulatedData?.battery}%")
+            Log.d(TAG, "Firmware: ${accumulatedData?.firmware}")
             Log.d(TAG, "Weight: ${accumulatedData?.weight} kg")
             Log.d(TAG, "BMI: ${accumulatedData?.bmi}")
             Log.d(TAG, "=========================")

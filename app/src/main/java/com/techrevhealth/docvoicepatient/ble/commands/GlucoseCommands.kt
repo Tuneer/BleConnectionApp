@@ -86,6 +86,24 @@ object GlucoseCommands {
     }
     
     /**
+     * 0x4F - Read battery status (EXPERIMENTAL)
+     * NOTE: This command is NOT documented in official glucose meter PDF
+     * but may work since all FORA devices use similar protocol
+     * Returns: Battery % and firmware version if supported
+     */
+    fun readBattery(): ByteArray {
+        val command = byteArrayOf(
+            0x51.toByte(),
+            0x4F.toByte(), // CMD: Battery (experimental)
+            0x00, 0x00, 0x00, 0x00,
+            0xA3.toByte(),
+            0x00
+        )
+        command[7] = calculateChecksum(command)
+        return command
+    }
+    
+    /**
      * 0x25 - Read stored measurement time (part 1)
      * Index: 0x00 = latest reading
      * Returns: M_Date (2 bytes), M_Time (2 bytes)

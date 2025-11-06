@@ -198,6 +198,7 @@ class Spo2ResponseParser(
         Log.d(TAG, "Model: ${accumulatedData?.deviceModel}")
         Log.d(TAG, "Serial: ${accumulatedData?.serialNumber}")
         Log.d(TAG, "Battery: ${accumulatedData?.battery}%")
+        Log.d(TAG, "Firmware: ${accumulatedData?.firmware}")
         Log.d(TAG, "SpO2: ${accumulatedData?.spo2}%")
         Log.d(TAG, "Pulse: ${accumulatedData?.pulse} bpm")
         Log.d(TAG, "=============================")

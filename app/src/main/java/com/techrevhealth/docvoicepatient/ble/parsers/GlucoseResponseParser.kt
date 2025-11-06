@@ -35,6 +35,7 @@ class GlucoseResponseParser(
             0x24 -> handle0x24DeviceModel(data, gatt, characteristic)
             0x27 -> handle0x27SerialPart1(data, gatt, characteristic)
             0x28 -> handle0x28SerialPart2(data, gatt, characteristic)
+            0x4F -> handle0x4FBattery(data, gatt, characteristic)
             0x25 -> handle0x25MeasurementTime(data, gatt, characteristic)
             0x26 -> handle0x26GlucoseValue(data)
         }
@@ -115,6 +116,25 @@ class GlucoseResponseParser(
         Log.d(TAG, "Complete Serial: $completeSerial")
         
         Handler(Looper.getMainLooper()).postDelayed({
+            writeCharacteristic(GlucoseCommands.readBattery(), gatt, characteristic)
+        }, 700)
+    }
+    
+    private fun handle0x4FBattery(data: ByteArray, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
+        Log.d(TAG, "0x4F: Battery (EXPERIMENTAL)")
+        try {
+            val battery = data[2].toInt() and 0xFF
+            val firmware = data[4].toInt() and 0xFF
+            
+            accumulatedData = accumulatedData?.copy(battery = battery, firmware = firmware.toString())
+                ?: accumulatedData
+            
+            Log.d(TAG, "Battery: $battery%, Firmware: $firmware")
+        } catch (e: Exception) {
+            Log.w(TAG, "0x4F failed (may not be supported): ${e.message}")
+        }
+        
+        Handler(Looper.getMainLooper()).postDelayed({
             writeCharacteristic(GlucoseCommands.readStoredMeasurementTime(), gatt, characteristic)
         }, 700)
     }
@@ -162,6 +182,8 @@ class GlucoseResponseParser(
         Log.d(TAG, "Measure Time: ${accumulatedData?.measureTime}")
         Log.d(TAG, "Model: ${accumulatedData?.deviceModel}")
         Log.d(TAG, "Serial: ${accumulatedData?.serialNumber}")
+        Log.d(TAG, "Battery: ${accumulatedData?.battery}%")
+        Log.d(TAG, "Firmware: ${accumulatedData?.firmware}")
         Log.d(TAG, "Glucose: ${accumulatedData?.glucose} mg/dL")
         Log.d(TAG, "==================")
         
