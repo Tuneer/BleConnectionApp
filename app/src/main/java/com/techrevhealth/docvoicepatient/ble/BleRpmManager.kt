@@ -134,7 +134,7 @@ class BleRpmManager(
     private fun buildReadGlucoseTimeCommand(): ByteArray {
         val command = byteArrayOf(
             0x51.toByte(),         // Start
-            0x23.toByte(),         // CMD: Read time part
+            0x25.toByte(),         // CMD: Read stored measurement time (0x25)
             0x00.toByte(), 0x00.toByte(),   // Index (0 = latest)
             0x00.toByte(), 0x00.toByte(),   // Unused
             0xA3.toByte(),         // Stop
@@ -835,9 +835,53 @@ class BleRpmManager(
                        firmware = null
                    ) ?: RpmDeviceData(deviceName = connectedDeviceName ?: "Unknown", serialNumber = completeSerial)
                    Log.d("FORA_GLUCOSE", "Complete Serial: $completeSerial")
-                   // Send glucose read command
+                   // Send 0x25 to get stored measurement time (part 1)
                    Handler(Looper.getMainLooper()).postDelayed({
-                       requestReadCommand(gatt, characteristic)
+                       val cmd0x25 = buildReadGlucoseTimeCommand()  // This sends 0x25
+                       characteristic.value = cmd0x25
+                       if (ActivityCompat.checkSelfPermission(
+                               context,
+                               Manifest.permission.BLUETOOTH_CONNECT
+                           ) != PackageManager.PERMISSION_GRANTED
+                       ) {
+                           return@postDelayed
+                       }
+                       gatt.writeCharacteristic(characteristic)
+                       Log.d("FORA_GLUCOSE", "Sent 0x25 command for measurement time")
+                   }, 700)
+               }
+               0x25 -> {
+                   Log.d(TAG, "parseGlucoseData: Measurement Time (0x25)")
+                   Log.d("FORA_GLUCOSE", "Raw bytes: [0]=${data[0]} [1]=${data[1]} [2]=${data[2]} [3]=${data[3]}")
+                   try {
+                       // M_Date: Data_1 + Data_0 (same format as 0x23 Table A)
+                       // M_Time: Data_3 + Data_2 (same format as 0x23 Table B)
+                       val data0 = data[0].toInt() and 0xFF
+                       val data1 = data[1].toInt() and 0xFF
+                       val minute = data[2].toInt() and 0x3F  // 6-bit
+                       val hour = data[3].toInt() and 0x1F    // 5-bit
+                       
+                       // Parse date from M_Date
+                       val day = data0 and 0x1F
+                       val month = ((data0 shr 5) and 0x07) or ((data1 and 0x01) shl 3)
+                       val year = ((data1 shr 1) and 0x7F) + 2000
+                       
+                       val measurementTime = String.format("%04d-%02d-%02d %02d:%02d", year, month, day, hour, minute)
+                       Log.d("FORA_GLUCOSE", "Stored Measurement Time: $measurementTime")
+                       
+                       // Update accumulated data with the stored measurement time
+                       accumulatedDeviceData = accumulatedDeviceData?.copy(
+                           measureTime = measurementTime
+                       ) ?: RpmDeviceData(
+                           deviceName = connectedDeviceName ?: "Unknown",
+                           measureTime = measurementTime
+                       )
+                   } catch (e: Exception) {
+                       Log.w("FORA_GLUCOSE", "Failed to parse measurement time: ${e.message}")
+                   }
+                   // Now send 0x26 to get glucose value (part 2)
+                   Handler(Looper.getMainLooper()).postDelayed({
+                       requestReadCommand(gatt, characteristic)  // This sends 0x26
                    }, 700)
                }
                0x26 -> {
