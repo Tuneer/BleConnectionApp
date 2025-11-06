@@ -281,6 +281,21 @@ class BleRpmManager(
         return command
     }
 
+    // EXPERIMENTAL: Battery command (NOT in official PDF)
+    // This command 0x4F is not documented in FORA SPO2 V1.05 specification
+    // but may be supported by actual hardware. Use with caution.
+    private fun buildBatteryCommand(): ByteArray {
+        val command = byteArrayOf(
+            0x51.toByte(),
+            0x4F.toByte(), // UNDOCUMENTED: Read battery/firmware info
+            0x00, 0x00, 0x00, 0x00,
+            0xA3.toByte(),
+            0x00
+        )
+        command[7] = calculateChecksum(command)
+        return command
+    }
+
     private fun calculateChecksum(data: ByteArray): Byte {
         var sum = 0
         for (i in 0 until 7) {
@@ -893,7 +908,27 @@ class BleRpmManager(
                         serialNumber = completeSerial
                     )
                     Log.d("FORA_SPO2", "Complete Serial Number: $completeSerial")
-                    // Wait and send read data command (skip undocumented 0x4F)
+                    // EXPERIMENTAL: Try undocumented 0x4F battery command
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        requestBatteryStatus(gatt, characteristic)
+                    }, 700) // delay must be >= 600ms to be safe
+                }
+                0x4F -> {
+                    // EXPERIMENTAL: 0x4F is NOT documented in official PDF
+                    Log.d(TAG, "parseForaSpo2Data: Battery (UNDOCUMENTED 0x4F)")
+                    try {
+                        val battery = data[2].toInt() and 0xFF
+                        val firmware = data[4].toInt() and 0xFF
+                        // Accumulate battery and firmware if command works
+                        accumulatedDeviceData = accumulatedDeviceData?.copy(
+                            battery = battery,
+                            firmware = firmware.toString()
+                        ) ?: accumulatedDeviceData
+                        Log.d("FORA_SPO2", "Battery: $battery%, Firmware: $firmware (EXPERIMENTAL)")
+                    } catch (e: Exception) {
+                        Log.w("FORA_SPO2", "0x4F battery command failed (expected - undocumented): ${e.message}")
+                    }
+                    // Continue to read data command regardless of 0x4F result
                     Handler(Looper.getMainLooper()).postDelayed({
                         requestReadCommand(gatt, characteristic)
                     }, 700) // delay must be >= 600ms to be safe
@@ -969,6 +1004,22 @@ class BleRpmManager(
         }
         val success = gatt.writeCharacteristic(characteristic)
         Log.d("BLE", "Device Model command write success: $success")
+    }
+
+    // EXPERIMENTAL: Battery request (0x4F not documented)
+    private fun requestBatteryStatus(gatt: BluetoothGatt, characteristic:
+    BluetoothGattCharacteristic) {
+        val batteryCommand = buildBatteryCommand()
+        characteristic.value = batteryCommand
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.BLUETOOTH_CONNECT
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+        val success = gatt.writeCharacteristic(characteristic)
+        Log.d("BLE", "Battery command (EXPERIMENTAL) write success: $success")
     }
 
     private fun requestReadCommand(gatt: BluetoothGatt, characteristic:
