@@ -281,19 +281,6 @@ class BleRpmManager(
         return command
     }
 
-    // Battery + System Info
-    private fun buildBatteryCommand(): ByteArray {
-        val command = byteArrayOf(
-            0x51.toByte(),
-            0x4F.toByte(), // Read battery and firmware
-            0x00, 0x00, 0x00, 0x00,
-            0xA3.toByte(),
-            0x00
-        )
-        command[7] = calculateChecksum(command)
-        return command
-    }
-
     private fun calculateChecksum(data: ByteArray): Byte {
         var sum = 0
         for (i in 0 until 7) {
@@ -906,26 +893,7 @@ class BleRpmManager(
                         serialNumber = completeSerial
                     )
                     Log.d("FORA_SPO2", "Complete Serial Number: $completeSerial")
-                    // Wait and send battery command
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        requestBatteryStatus(gatt, characteristic)
-                    }, 700) // delay must be >= 600ms to be safe
-                }
-                0x4F -> {
-                    Log.d(TAG, "parseForaSpo2Data: battery")
-                    val battery = data[2].toInt() and 0xFF
-                    val firmware = data[4].toInt() and 0xFF
-                    // Accumulate battery and firmware
-                    accumulatedDeviceData = accumulatedDeviceData?.copy(
-                        battery = battery,
-                        firmware = firmware.toString()
-                    ) ?: RpmDeviceData(
-                        deviceName = connectedDeviceName ?: "Unknown",
-                        battery = battery,
-                        firmware = firmware.toString()
-                    )
-                    Log.d("FORA_SPO2", "Battery: $battery%, Firmware: $firmware")
-                    // Wait and send read data command
+                    // Wait and send read data command (skip undocumented 0x4F)
                     Handler(Looper.getMainLooper()).postDelayed({
                         requestReadCommand(gatt, characteristic)
                     }, 700) // delay must be >= 600ms to be safe
@@ -1001,21 +969,6 @@ class BleRpmManager(
         }
         val success = gatt.writeCharacteristic(characteristic)
         Log.d("BLE", "Device Model command write success: $success")
-    }
-
-    private fun requestBatteryStatus(gatt: BluetoothGatt, characteristic:
-    BluetoothGattCharacteristic) {
-        val batteryCommand = buildBatteryCommand()
-        characteristic.value = batteryCommand
-        if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.BLUETOOTH_CONNECT
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            return
-        }
-        val success = gatt.writeCharacteristic(characteristic)
-        Log.d("BLE", "Battery command write success: $success")
     }
 
     private fun requestReadCommand(gatt: BluetoothGatt, characteristic:
