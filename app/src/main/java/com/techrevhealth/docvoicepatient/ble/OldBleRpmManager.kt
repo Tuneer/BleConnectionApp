@@ -464,7 +464,8 @@ class OldBleRpmManager(
                     onDataComplete = { data ->
                         currentDeviceData = data
                         listener.onDataReceived(deviceName, data)
-                    }
+                    },
+                    writeCharacteristic = ::writeCharacteristic
                 )
             }
         }

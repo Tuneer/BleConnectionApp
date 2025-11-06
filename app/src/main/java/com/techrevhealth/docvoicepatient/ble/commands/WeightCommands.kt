@@ -1,37 +1,106 @@
 package com.techrevhealth.docvoicepatient.ble.commands
 
 /**
- * Weight Scale Commands (TNG SCALE)
- * Based on TNG Scale protocol
+ * Weight Scale Commands (TNG SCALE / FORA W300 series)
+ * Based on FORA WS series protocol v1.09
+ * 
+ * Command sequence: 0x23 → 0x24 → 0x27 → 0x28 → 0x71 (weight data)
  */
 object WeightCommands {
     
     /**
-     * 0x52 - Clear/Delete all memory
+     * 0x23 - Read clock time
+     * Returns: Current device date/time
      */
-    fun clearMemory(): ByteArray {
+    fun readClockTime(): ByteArray {
         val command = byteArrayOf(
             0x51.toByte(),
-            0x52.toByte(), // CMD: Clear memory
+            0x23.toByte(), // CMD: Read clock
             0x00, 0x00, 0x00, 0x00,
             0xA3.toByte(),
             0x00
         )
-        command[6] = calculateDynamicChecksum(command)
+        command[7] = calculateChecksum(command)
         return command
     }
     
     /**
-     * 0x71 - Read weight data
-     * Returns: Weight in kg, BMI, timestamp
+     * 0x24 - Read device model
+     * Returns: Model code (2-byte Word)
      */
-    fun readWeightData(): ByteArray {
+    fun readDeviceModel(): ByteArray {
+        val command = byteArrayOf(
+            0x51.toByte(),
+            0x24.toByte(), // CMD: Read model
+            0x00, 0x00, 0x00, 0x00,
+            0xA3.toByte(),
+            0x00
+        )
+        command[7] = calculateChecksum(command)
+        return command
+    }
+    
+    /**
+     * 0x27 - Read serial number part 1 (SN_0~SN_3)
+     * Returns: Second half of serial number
+     */
+    fun readSerialPart1(): ByteArray {
+        val command = byteArrayOf(
+            0x51.toByte(),
+            0x27.toByte(), // CMD: Serial part 1
+            0x00, 0x00, 0x00, 0x00,
+            0xA3.toByte(),
+            0x00
+        )
+        command[7] = calculateChecksum(command)
+        return command
+    }
+    
+    /**
+     * 0x28 - Read serial number part 2 (SN_4~SN_7)
+     * Returns: First half of serial number
+     * Complete serial = 0x28 result + 0x27 result
+     */
+    fun readSerialPart2(): ByteArray {
+        val command = byteArrayOf(
+            0x51.toByte(),
+            0x28.toByte(), // CMD: Serial part 2
+            0x00, 0x00, 0x00, 0x00,
+            0xA3.toByte(),
+            0x00
+        )
+        command[7] = calculateChecksum(command)
+        return command
+    }
+    
+    /**
+     * 0x2B - Read storage number of data
+     * Returns: Number of stored readings
+     */
+    fun readStorageNumber(): ByteArray {
+        val command = byteArrayOf(
+            0x51.toByte(),
+            0x2B.toByte(), // CMD: Read storage number
+            0x00, 0x00, 0x00, 0x00,
+            0xA3.toByte(),
+            0x00
+        )
+        command[7] = calculateChecksum(command)
+        return command
+    }
+    
+    /**
+     * 0x71 - Read weight data with index
+     * index: 0 = newest record, 1 = second newest, etc.
+     * Returns: 29 bytes (0x1D) including time, weight, BMI, body composition
+     */
+    fun readWeightData(index: Int = 0): ByteArray {
         val command = byteArrayOf(
             0x51.toByte(),
             0x71.toByte(), // CMD: Read weight data
-            0x02,
-            0x01,
-            0x00,
+            0x02.toByte(), // Length
+            (index and 0xFF).toByte(), // Idx_L
+            ((index shr 8) and 0xFF).toByte(), // Idx_H
             0xA3.toByte(),
             0x00  // Checksum
         )

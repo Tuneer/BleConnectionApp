@@ -208,7 +208,8 @@ class BleRpmManager(
                     onDataComplete = { data ->
                         currentDeviceData = data
                         listener.onDataReceived(deviceName, data)
-                    }
+                    },
+                    writeCharacteristic = ::writeCharacteristic
                 )
             }
         }
@@ -449,7 +450,7 @@ class BleRpmManager(
                         BpCommands.clearMemory()
                     }
                     connectedDeviceName?.contains("TNG SCALE", ignoreCase = true) == true -> {
-                        WeightCommands.readWeightData()
+                        WeightCommands.readClockTime()
                     }
                     else -> ByteArray(0)
                 }
