@@ -590,7 +590,7 @@ class BleRpmManager(
                 }
                 else -> Log.w("BLE", "Unknown device: $deviceName, Raw data: ${data.joinToString()}")
             }
-            stop()
+            //stop()
         }
 
 
@@ -928,9 +928,19 @@ class BleRpmManager(
                     } catch (e: Exception) {
                         Log.w("FORA_SPO2", "0x4F battery command failed (expected - undocumented): ${e.message}")
                     }
-                    // Continue to read data command regardless of 0x4F result
+                    // Send 0x49 command directly to get SpO2/Pulse data
+                    val readCommand = buildReadCommand()
+                    characteristic.value = readCommand
                     Handler(Looper.getMainLooper()).postDelayed({
-                        requestReadCommand(gatt, characteristic)
+                        if (ActivityCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.BLUETOOTH_CONNECT
+                            ) != PackageManager.PERMISSION_GRANTED
+                        ) {
+                            return@postDelayed
+                        }
+                        gatt.writeCharacteristic(characteristic)
+                        Log.d("BLE", "0x49 Read SpO2 command sent")
                     }, 700) // delay must be >= 600ms to be safe
                 }
                 0x49 -> {
@@ -1046,7 +1056,7 @@ class BleRpmManager(
 
     private fun chooseReadCommand(): ByteArray {
         if (connectedDeviceName.equals(RpmDeviceType.TNG_SPO2.displayName, true)) {
-            return buildReadCommand()
+            return clearMemoryCommand()
         }else if (connectedDeviceName.equals(RpmDeviceType.FORA_PREMIUM_V10.displayName,true)){
             return buildReadGlucoseResultCommand()
         }else if (connectedDeviceName.equals(RpmDeviceType.FORA_P20.displayName,true)){
