@@ -990,10 +990,52 @@ class BleRpmManager(
                     }, 700) // delay must be >= 600ms to be safe
                 }
                 0x49 -> {
-                    Log.d(TAG, "parseForaSpo2Data: Data: ")
-                    val spo2 = data[2].toInt() and 0xFF
-                    val pulse = data[5].toInt() and 0xFF
-                    Log.d("FORA_SPO2", "SpO2: $spo2%, Heart Rate: $pulse bpm")
+                    Log.d(TAG, "parseForaSpo2Data: SpO2/Pulse Data (0x49)")
+                    
+                    // Log ALL bytes to debug device variations
+                    val hexString = data.joinToString(" ") { String.format("%02X", it) }
+                    Log.d("FORA_SPO2", "=== 0x49 RAW BYTES ===")
+                    Log.d("FORA_SPO2", "Hex: $hexString")
+                    Log.d("FORA_SPO2", "Size: ${data.size} bytes")
+                    for (i in data.indices) {
+                        Log.d("FORA_SPO2", "Byte[$i] = ${data[i].toInt() and 0xFF} (0x${String.format("%02X", data[i])})")
+                    }
+                    
+                    // Try standard positions first (data[2] for SpO2, data[5] for pulse)
+                    val spo2_std = if (data.size > 2) data[2].toInt() and 0xFF else 0
+                    val pulse_std = if (data.size > 5) data[5].toInt() and 0xFF else 0
+                    
+                    Log.d("FORA_SPO2", "Standard parsing - SpO2[2]: $spo2_std%, Pulse[5]: $pulse_std bpm")
+                    
+                    // Try alternative positions in case device uses different format
+                    var spo2 = spo2_std
+                    var pulse = pulse_std
+                    
+                    // If values are 0 or unrealistic, try other byte positions
+                    if (spo2 == 0 || spo2 > 100) {
+                        // Try other positions for SpO2
+                        for (i in data.indices) {
+                            val val_i = data[i].toInt() and 0xFF
+                            if (val_i in 70..100) {  // Valid SpO2 range
+                                Log.d("FORA_SPO2", "*** FOUND SpO2 at byte[$i] = $val_i ***")
+                                if (spo2 == 0 || spo2 > 100) spo2 = val_i
+                            }
+                        }
+                    }
+                    
+                    if (pulse == 0 || pulse > 200) {
+                        // Try other positions for Pulse
+                        for (i in data.indices) {
+                            val val_i = data[i].toInt() and 0xFF
+                            if (val_i in 40..200 && val_i != spo2) {  // Valid pulse range, not same as SpO2
+                                Log.d("FORA_SPO2", "*** FOUND Pulse at byte[$i] = $val_i ***")
+                                if (pulse == 0 || pulse > 200) pulse = val_i
+                            }
+                        }
+                    }
+                    
+                    Log.d("FORA_SPO2", "FINAL VALUES - SpO2: $spo2%, Heart Rate: $pulse bpm")
+                    
                     // Accumulate SpO2 and pulse data
                     accumulatedDeviceData = accumulatedDeviceData?.copy(
                         spo2 = spo2,
