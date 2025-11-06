@@ -8,8 +8,10 @@ data class RpmDeviceData(
     val diastolic: Double? = null,
     val weight: Double? = null,
     val bmi: Double? = null,
+    val bodyFat: Double? = null,
     val glucose: Double? = null,
     val battery: Int? = null,
     val firmware: String? = null,
-    val serialNumber: String? = null
+    val serialNumber: String? = null,
+    val temperature: Double? = null // Added for Salyx temperature data
 )

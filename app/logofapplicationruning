@@ -1,0 +1,449 @@
+onScanResult: Found devices: TNG SCALE
+2025-10-17 20:17:36.068 25300-25300 BleRpmManager           com.techrevhealth.docvoicepatient    D  Stopping BLE scan...
+2025-10-17 20:17:36.070 25300-25300 BluetoothAdapter        com.techrevhealth.docvoicepatient    D  isLeEnabled(): ON
+2025-10-17 20:17:36.085 25300-25300 BluetoothGatt           com.techrevhealth.docvoicepatient    D  connect() - device: C0:26:DA:28:C4:75, auto: false, eattSupport: false
+2025-10-17 20:17:36.085 25300-25300 BluetoothGatt           com.techrevhealth.docvoicepatient    D  registerApp()
+2025-10-17 20:17:36.085 25300-25300 BluetoothGatt           com.techrevhealth.docvoicepatient    D  registerApp() - UUID=bd54216a-c4e4-4210-97ed-5b48df8628fd
+2025-10-17 20:17:36.087 25300-26600 BluetoothGatt           com.techrevhealth.docvoicepatient    D  onClientRegistered() - status=0 clientIf=6
+2025-10-17 20:17:36.671 25300-26600 BluetoothGatt           com.techrevhealth.docvoicepatient    D  onClientConnectionState() - status=0 clientIf=6 connected=true device=C0:26:DA:28:C4:75
+2025-10-17 20:17:36.671 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Connected to TNG SCALE
+2025-10-17 20:17:36.672 25300-26600 BluetoothGatt           com.techrevhealth.docvoicepatient    D  configureMTU() - device: C0:26:DA:28:C4:75 mtu: 50
+2025-10-17 20:17:36.689 25300-25300 ViewRootImpl            com.techrevhealth.docvoicepatient    D  AppSizeAfterRelayout, size: Point(1269, 444), rotation: ROTATION_0
+2025-10-17 20:17:36.956 25300-26600 BluetoothGatt           com.techrevhealth.docvoicepatient    D  onConnectionUpdated() - Device=C0:26:DA:28:C4:75 interval=6 latency=0 timeout=500 status=0
+2025-10-17 20:17:37.234 25300-26600 BluetoothGatt           com.techrevhealth.docvoicepatient    D  onConfigureMTU() - Device=C0:26:DA:28:C4:75 mtu=31 status=0
+2025-10-17 20:17:37.234 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onMtuChanged: 31
+2025-10-17 20:17:37.235 25300-26600 BluetoothGatt           com.techrevhealth.docvoicepatient    D  discoverServices() - device: C0:26:DA:28:C4:75
+2025-10-17 20:17:37.238 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  GATT Services discovered
+2025-10-17 20:17:37.242 25300-26600 BluetoothGatt           com.techrevhealth.docvoicepatient    D  onSearchComplete() = Device=C0:26:DA:28:C4:75 Status=0
+2025-10-17 20:17:37.242 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Service UUID: 00001800-0000-1000-8000-00805f9b34fb
+2025-10-17 20:17:37.242 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Characteristic UUID: 00002a00-0000-1000-8000-00805f9b34fb (Properties: 2)
+2025-10-17 20:17:37.242 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Supports read
+2025-10-17 20:17:37.242 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Supports default write type
+2025-10-17 20:17:37.242 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Characteristic UUID: 00002a01-0000-1000-8000-00805f9b34fb (Properties: 2)
+2025-10-17 20:17:37.243 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Supports read
+2025-10-17 20:17:37.243 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Supports default write type
+2025-10-17 20:17:37.243 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Characteristic UUID: 00002a04-0000-1000-8000-00805f9b34fb (Properties: 2)
+2025-10-17 20:17:37.243 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Supports read
+2025-10-17 20:17:37.243 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Supports default write type
+2025-10-17 20:17:37.243 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Service UUID: 00001801-0000-1000-8000-00805f9b34fb
+2025-10-17 20:17:37.243 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Service UUID: 0000180f-0000-1000-8000-00805f9b34fb
+2025-10-17 20:17:37.243 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Characteristic UUID: 00002a19-0000-1000-8000-00805f9b34fb (Properties: 18)
+2025-10-17 20:17:37.243 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Supports notifications
+2025-10-17 20:17:37.243 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Supports read
+2025-10-17 20:17:37.243 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Supports default write type
+2025-10-17 20:17:37.243 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Service UUID: 0000180a-0000-1000-8000-00805f9b34fb
+2025-10-17 20:17:37.244 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Characteristic UUID: 00002a24-0000-1000-8000-00805f9b34fb (Properties: 2)
+2025-10-17 20:17:37.244 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Supports read
+2025-10-17 20:17:37.244 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Supports default write type
+2025-10-17 20:17:37.244 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Characteristic UUID: 00002a25-0000-1000-8000-00805f9b34fb (Properties: 2)
+2025-10-17 20:17:37.244 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Supports read
+2025-10-17 20:17:37.244 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Supports default write type
+2025-10-17 20:17:37.244 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Characteristic UUID: 00002a26-0000-1000-8000-00805f9b34fb (Properties: 2)
+2025-10-17 20:17:37.244 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Supports read
+2025-10-17 20:17:37.244 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Supports default write type
+2025-10-17 20:17:37.244 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Service UUID: 0000181d-0000-1000-8000-00805f9b34fb
+2025-10-17 20:17:37.244 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Characteristic UUID: 00002a9e-0000-1000-8000-00805f9b34fb (Properties: 2)
+2025-10-17 20:17:37.244 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Supports read
+2025-10-17 20:17:37.244 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Supports default write type
+2025-10-17 20:17:37.244 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Characteristic UUID: 00002a9d-0000-1000-8000-00805f9b34fb (Properties: 32)
+2025-10-17 20:17:37.244 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Supports indications
+2025-10-17 20:17:37.244 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Service UUID: 00001523-1212-efde-1523-785feabcd123
+2025-10-17 20:17:37.244 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Characteristic UUID: 00001524-1212-efde-1523-785feabcd123 (Properties: 24)
+2025-10-17 20:17:37.244 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Supports notifications
+2025-10-17 20:17:37.244 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Supports write
+2025-10-17 20:17:37.245 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onServicesDiscovered: INSIDE NOTIFY
+2025-10-17 20:17:37.245 25300-26600 BluetoothGatt           com.techrevhealth.docvoicepatient    D  setCharacteristicNotification() - uuid: 00001524-1212-efde-1523-785feabcd123 enable: true
+2025-10-17 20:17:37.262 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Descriptor write status: 0
+2025-10-17 20:17:37.262 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Descriptor write succeeded TNG SCALE
+2025-10-17 20:17:37.262 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:37.262 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:37.283 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onDescriptorWrite: Success Write true
+2025-10-17 20:17:37.284 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Characteristic write status: 0
+2025-10-17 20:17:37.285 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Value [B@2757ca
+2025-10-17 20:17:37.286 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Properties 24
+2025-10-17 20:17:37.288 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  parseWeightData: 01 00
+2025-10-17 20:17:37.288 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Received Weight Data (2 bytes):
+2025-10-17 20:17:37.288 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[0]: 1
+2025-10-17 20:17:37.288 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[1]: 0
+2025-10-17 20:17:37.288 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    W  Invalid weight data size: 2
+2025-10-17 20:17:37.288 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:37.288 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:37.290 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Read command write success: true
+2025-10-17 20:17:37.291 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Characteristic write status: 0
+2025-10-17 20:17:37.299 25300-26600 BluetoothGatt           com.techrevhealth.docvoicepatient    D  onConnectionUpdated() - Device=C0:26:DA:28:C4:75 interval=24 latency=0 timeout=500 status=0
+2025-10-17 20:17:37.448 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Value [B@dbc1d3b
+2025-10-17 20:17:37.448 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Properties 24
+2025-10-17 20:17:37.450 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  parseWeightData: 51 71 1D 03 18 09 19 0C
+2025-10-17 20:17:37.451 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Received Weight Data (8 bytes):
+2025-10-17 20:17:37.451 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[0]: 81
+2025-10-17 20:17:37.451 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[1]: 113
+2025-10-17 20:17:37.451 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[2]: 29
+2025-10-17 20:17:37.451 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[3]: 3
+2025-10-17 20:17:37.451 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[4]: 24
+2025-10-17 20:17:37.451 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[5]: 9
+2025-10-17 20:17:37.451 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[6]: 25
+2025-10-17 20:17:37.451 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[7]: 12
+2025-10-17 20:17:37.451 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    W  Invalid weight data size: 8
+2025-10-17 20:17:37.451 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:37.451 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:37.452 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Read command write success: true
+2025-10-17 20:17:37.452 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Value [B@a29c58
+2025-10-17 20:17:37.453 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Properties 24
+2025-10-17 20:17:37.455 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  parseWeightData: 22 01 01 B7 02 D0 1E 01
+2025-10-17 20:17:37.455 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Received Weight Data (8 bytes):
+2025-10-17 20:17:37.455 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[0]: 34
+2025-10-17 20:17:37.455 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[1]: 1
+2025-10-17 20:17:37.455 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[2]: 1
+2025-10-17 20:17:37.455 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[3]: 183
+2025-10-17 20:17:37.455 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[4]: 2
+2025-10-17 20:17:37.455 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[5]: 208
+2025-10-17 20:17:37.455 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[6]: 30
+2025-10-17 20:17:37.455 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[7]: 1
+2025-10-17 20:17:37.455 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    W  Invalid weight data size: 8
+2025-10-17 20:17:37.455 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:37.455 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:37.455 25300-26573 BLE                     com.techrevhealth.docvoicepatient    D  Read command write success: false
+2025-10-17 20:17:37.455 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Value [B@4ef91b1
+2025-10-17 20:17:37.456 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Properties 24
+2025-10-17 20:17:37.457 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  parseWeightData: 00 50 00 B0 00 00 00 00
+2025-10-17 20:17:37.457 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Received Weight Data (8 bytes):
+2025-10-17 20:17:37.457 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[0]: 0
+2025-10-17 20:17:37.457 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[1]: 80
+2025-10-17 20:17:37.457 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[2]: 0
+2025-10-17 20:17:37.457 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[3]: 176
+2025-10-17 20:17:37.457 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[4]: 0
+2025-10-17 20:17:37.457 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[5]: 0
+2025-10-17 20:17:37.457 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[6]: 0
+2025-10-17 20:17:37.457 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[7]: 0
+2025-10-17 20:17:37.457 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    W  Invalid weight data size: 8
+2025-10-17 20:17:37.457 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:37.457 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:37.457 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Read command write success: false
+2025-10-17 20:17:37.457 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Value [B@84b2696
+2025-10-17 20:17:37.457 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Properties 24
+2025-10-17 20:17:37.458 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  parseWeightData: 00 00 00 00 00 00 00 00
+2025-10-17 20:17:37.458 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Received Weight Data (8 bytes):
+2025-10-17 20:17:37.458 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[0]: 0
+2025-10-17 20:17:37.458 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[1]: 0
+2025-10-17 20:17:37.458 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[2]: 0
+2025-10-17 20:17:37.458 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[3]: 0
+2025-10-17 20:17:37.458 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[4]: 0
+2025-10-17 20:17:37.458 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[5]: 0
+2025-10-17 20:17:37.458 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[6]: 0
+2025-10-17 20:17:37.458 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[7]: 0
+2025-10-17 20:17:37.458 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    W  Invalid weight data size: 8
+2025-10-17 20:17:37.458 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:37.458 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:37.458 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Read command write success: false
+2025-10-17 20:17:37.458 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Value [B@bc55217
+2025-10-17 20:17:37.458 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Properties 24
+2025-10-17 20:17:37.459 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  parseWeightData: A5 99
+2025-10-17 20:17:37.459 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Received Weight Data (2 bytes):
+2025-10-17 20:17:37.459 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[0]: 165
+2025-10-17 20:17:37.459 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[1]: 153
+2025-10-17 20:17:37.459 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    W  Invalid weight data size: 2
+2025-10-17 20:17:37.459 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:37.459 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:37.459 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Read command write success: false
+2025-10-17 20:17:37.459 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Characteristic write status: 0
+2025-10-17 20:17:37.635 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Value [B@6d12604
+2025-10-17 20:17:37.635 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Properties 24
+2025-10-17 20:17:37.637 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  parseWeightData: 51 71 1D 03 18 09 19 0C
+2025-10-17 20:17:37.637 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Received Weight Data (8 bytes):
+2025-10-17 20:17:37.637 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[0]: 81
+2025-10-17 20:17:37.637 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[1]: 113
+2025-10-17 20:17:37.638 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[2]: 29
+2025-10-17 20:17:37.638 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[3]: 3
+2025-10-17 20:17:37.638 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[4]: 24
+2025-10-17 20:17:37.638 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[5]: 9
+2025-10-17 20:17:37.638 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[6]: 25
+2025-10-17 20:17:37.638 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[7]: 12
+2025-10-17 20:17:37.638 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    W  Invalid weight data size: 8
+2025-10-17 20:17:37.638 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:37.638 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:37.639 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Read command write success: true
+2025-10-17 20:17:37.639 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Value [B@bba97ed
+2025-10-17 20:17:37.639 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Properties 24
+2025-10-17 20:17:37.641 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  parseWeightData: 22 01 01 B7 02 D0 1E 01
+2025-10-17 20:17:37.641 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Received Weight Data (8 bytes):
+2025-10-17 20:17:37.641 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[0]: 34
+2025-10-17 20:17:37.641 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[1]: 1
+2025-10-17 20:17:37.641 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[2]: 1
+2025-10-17 20:17:37.641 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[3]: 183
+2025-10-17 20:17:37.641 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[4]: 2
+2025-10-17 20:17:37.641 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[5]: 208
+2025-10-17 20:17:37.641 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[6]: 30
+2025-10-17 20:17:37.641 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[7]: 1
+2025-10-17 20:17:37.641 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    W  Invalid weight data size: 8
+2025-10-17 20:17:37.641 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:37.641 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:37.641 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Read command write success: false
+2025-10-17 20:17:37.641 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Value [B@70b1622
+2025-10-17 20:17:37.641 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Properties 24
+2025-10-17 20:17:37.642 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  parseWeightData: 00 50 00 B0 00 00 00 00
+2025-10-17 20:17:37.642 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Received Weight Data (8 bytes):
+2025-10-17 20:17:37.642 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[0]: 0
+2025-10-17 20:17:37.642 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[1]: 80
+2025-10-17 20:17:37.642 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[2]: 0
+2025-10-17 20:17:37.642 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[3]: 176
+2025-10-17 20:17:37.642 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[4]: 0
+2025-10-17 20:17:37.642 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[5]: 0
+2025-10-17 20:17:37.642 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[6]: 0
+2025-10-17 20:17:37.642 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[7]: 0
+2025-10-17 20:17:37.642 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    W  Invalid weight data size: 8
+2025-10-17 20:17:37.642 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:37.642 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:37.643 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Read command write success: false
+2025-10-17 20:17:37.643 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Value [B@c2f8b3
+2025-10-17 20:17:37.643 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Properties 24
+2025-10-17 20:17:37.644 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  parseWeightData: 00 00 00 00 00 00 00 00
+2025-10-17 20:17:37.644 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Received Weight Data (8 bytes):
+2025-10-17 20:17:37.644 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[0]: 0
+2025-10-17 20:17:37.644 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[1]: 0
+2025-10-17 20:17:37.644 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[2]: 0
+2025-10-17 20:17:37.644 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[3]: 0
+2025-10-17 20:17:37.644 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[4]: 0
+2025-10-17 20:17:37.644 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[5]: 0
+2025-10-17 20:17:37.644 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[6]: 0
+2025-10-17 20:17:37.644 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[7]: 0
+2025-10-17 20:17:37.644 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    W  Invalid weight data size: 8
+2025-10-17 20:17:37.644 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:37.644 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:37.644 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Read command write success: false
+2025-10-17 20:17:37.645 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Value [B@83c9e70
+2025-10-17 20:17:37.645 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Properties 24
+2025-10-17 20:17:37.646 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  parseWeightData: A5 99
+2025-10-17 20:17:37.646 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Received Weight Data (2 bytes):
+2025-10-17 20:17:37.646 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[0]: 165
+2025-10-17 20:17:37.646 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[1]: 153
+2025-10-17 20:17:37.646 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    W  Invalid weight data size: 2
+2025-10-17 20:17:37.646 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:37.646 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:37.646 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Read command write success: false
+2025-10-17 20:17:37.646 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Characteristic write status: 0
+2025-10-17 20:17:37.813 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Value [B@4b5c5e9
+2025-10-17 20:17:37.814 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Properties 24
+2025-10-17 20:17:37.818 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  parseWeightData: 51 71 1D 03 18 09 19 0C
+2025-10-17 20:17:37.819 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Received Weight Data (8 bytes):
+2025-10-17 20:17:37.819 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[0]: 81
+2025-10-17 20:17:37.819 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[1]: 113
+2025-10-17 20:17:37.819 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[2]: 29
+2025-10-17 20:17:37.819 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[3]: 3
+2025-10-17 20:17:37.819 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[4]: 24
+2025-10-17 20:17:37.819 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[5]: 9
+2025-10-17 20:17:37.819 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[6]: 25
+2025-10-17 20:17:37.819 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[7]: 12
+2025-10-17 20:17:37.819 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    W  Invalid weight data size: 8
+2025-10-17 20:17:37.819 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:37.819 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:37.821 25300-26573 BLE                     com.techrevhealth.docvoicepatient    D  Read command write success: true
+2025-10-17 20:17:37.822 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Value [B@ee8726e
+2025-10-17 20:17:37.822 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Properties 24
+2025-10-17 20:17:37.824 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  parseWeightData: 22 01 01 B7 02 D0 1E 01
+2025-10-17 20:17:37.824 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Received Weight Data (8 bytes):
+2025-10-17 20:17:37.824 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[0]: 34
+2025-10-17 20:17:37.824 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[1]: 1
+2025-10-17 20:17:37.824 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[2]: 1
+2025-10-17 20:17:37.824 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[3]: 183
+2025-10-17 20:17:37.824 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[4]: 2
+2025-10-17 20:17:37.824 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[5]: 208
+2025-10-17 20:17:37.824 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[6]: 30
+2025-10-17 20:17:37.824 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[7]: 1
+2025-10-17 20:17:37.824 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    W  Invalid weight data size: 8
+2025-10-17 20:17:37.824 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:37.824 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:37.824 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Read command write success: false
+2025-10-17 20:17:37.825 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Value [B@aea6d0f
+2025-10-17 20:17:37.825 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Properties 24
+2025-10-17 20:17:37.827 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  parseWeightData: 00 50 00 B0 00 00 00 00
+2025-10-17 20:17:37.827 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Received Weight Data (8 bytes):
+2025-10-17 20:17:37.827 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[0]: 0
+2025-10-17 20:17:37.827 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[1]: 80
+2025-10-17 20:17:37.827 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[2]: 0
+2025-10-17 20:17:37.827 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[3]: 176
+2025-10-17 20:17:37.827 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[4]: 0
+2025-10-17 20:17:37.827 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[5]: 0
+2025-10-17 20:17:37.827 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[6]: 0
+2025-10-17 20:17:37.827 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[7]: 0
+2025-10-17 20:17:37.827 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    W  Invalid weight data size: 8
+2025-10-17 20:17:37.827 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:37.827 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:37.827 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Read command write success: false
+2025-10-17 20:17:37.828 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Value [B@ba5319c
+2025-10-17 20:17:37.828 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Properties 24
+2025-10-17 20:17:37.829 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  parseWeightData: 00 00 00 00 00 00 00 00
+2025-10-17 20:17:37.829 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Received Weight Data (8 bytes):
+2025-10-17 20:17:37.829 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[0]: 0
+2025-10-17 20:17:37.829 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[1]: 0
+2025-10-17 20:17:37.829 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[2]: 0
+2025-10-17 20:17:37.829 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[3]: 0
+2025-10-17 20:17:37.829 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[4]: 0
+2025-10-17 20:17:37.829 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[5]: 0
+2025-10-17 20:17:37.829 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[6]: 0
+2025-10-17 20:17:37.829 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[7]: 0
+2025-10-17 20:17:37.830 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    W  Invalid weight data size: 8
+2025-10-17 20:17:37.830 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:37.830 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:37.830 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Read command write success: false
+2025-10-17 20:17:37.830 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Value [B@51bd7a5
+2025-10-17 20:17:37.830 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Properties 24
+2025-10-17 20:17:37.832 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  parseWeightData: A5 99
+2025-10-17 20:17:37.832 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Received Weight Data (2 bytes):
+2025-10-17 20:17:37.832 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[0]: 165
+2025-10-17 20:17:37.832 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[1]: 153
+2025-10-17 20:17:37.832 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    W  Invalid weight data size: 2
+2025-10-17 20:17:37.832 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:37.832 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:37.832 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Read command write success: false
+2025-10-17 20:17:37.833 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Characteristic write status: 0
+2025-10-17 20:17:37.991 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Value [B@72d477a
+2025-10-17 20:17:37.992 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Properties 24
+2025-10-17 20:17:37.996 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  parseWeightData: 51 71 1D 03 18 09 19 0C
+2025-10-17 20:17:37.996 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Received Weight Data (8 bytes):
+2025-10-17 20:17:37.996 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[0]: 81
+2025-10-17 20:17:37.996 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[1]: 113
+2025-10-17 20:17:37.997 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[2]: 29
+2025-10-17 20:17:37.997 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[3]: 3
+2025-10-17 20:17:37.997 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[4]: 24
+2025-10-17 20:17:37.997 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[5]: 9
+2025-10-17 20:17:37.997 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[6]: 25
+2025-10-17 20:17:37.997 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[7]: 12
+2025-10-17 20:17:37.997 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    W  Invalid weight data size: 8
+2025-10-17 20:17:37.997 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:37.997 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:37.999 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Read command write success: true
+2025-10-17 20:17:38.000 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Value [B@c6acb2b
+2025-10-17 20:17:38.000 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Properties 24
+2025-10-17 20:17:38.001 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  parseWeightData: 22 01 01 B7 02 D0 1E 01
+2025-10-17 20:17:38.002 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Received Weight Data (8 bytes):
+2025-10-17 20:17:38.002 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[0]: 34
+2025-10-17 20:17:38.002 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[1]: 1
+2025-10-17 20:17:38.002 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[2]: 1
+2025-10-17 20:17:38.002 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[3]: 183
+2025-10-17 20:17:38.002 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[4]: 2
+2025-10-17 20:17:38.002 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[5]: 208
+2025-10-17 20:17:38.002 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[6]: 30
+2025-10-17 20:17:38.002 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[7]: 1
+2025-10-17 20:17:38.002 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    W  Invalid weight data size: 8
+2025-10-17 20:17:38.002 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:38.002 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:38.002 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Read command write success: false
+2025-10-17 20:17:38.002 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Value [B@1a1cb88
+2025-10-17 20:17:38.002 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Properties 24
+2025-10-17 20:17:38.004 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  parseWeightData: 00 50 00 B0 00 00 00 00
+2025-10-17 20:17:38.004 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Received Weight Data (8 bytes):
+2025-10-17 20:17:38.004 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[0]: 0
+2025-10-17 20:17:38.004 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[1]: 80
+2025-10-17 20:17:38.004 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[2]: 0
+2025-10-17 20:17:38.004 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[3]: 176
+2025-10-17 20:17:38.004 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[4]: 0
+2025-10-17 20:17:38.004 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[5]: 0
+2025-10-17 20:17:38.004 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[6]: 0
+2025-10-17 20:17:38.004 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[7]: 0
+2025-10-17 20:17:38.004 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    W  Invalid weight data size: 8
+2025-10-17 20:17:38.004 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:38.004 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:38.004 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Read command write success: false
+2025-10-17 20:17:38.004 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Value [B@1174921
+2025-10-17 20:17:38.005 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Properties 24
+2025-10-17 20:17:38.006 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  parseWeightData: 00 00 00 00 00 00 00 00
+2025-10-17 20:17:38.006 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Received Weight Data (8 bytes):
+2025-10-17 20:17:38.006 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[0]: 0
+2025-10-17 20:17:38.006 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[1]: 0
+2025-10-17 20:17:38.006 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[2]: 0
+2025-10-17 20:17:38.006 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[3]: 0
+2025-10-17 20:17:38.006 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[4]: 0
+2025-10-17 20:17:38.006 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[5]: 0
+2025-10-17 20:17:38.006 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[6]: 0
+2025-10-17 20:17:38.006 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[7]: 0
+2025-10-17 20:17:38.006 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    W  Invalid weight data size: 8
+2025-10-17 20:17:38.006 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:38.006 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:38.006 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Read command write success: false
+2025-10-17 20:17:38.007 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Value [B@fb86146
+2025-10-17 20:17:38.007 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Properties 24
+2025-10-17 20:17:38.008 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  parseWeightData: A5 99
+2025-10-17 20:17:38.008 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Received Weight Data (2 bytes):
+2025-10-17 20:17:38.008 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[0]: 165
+2025-10-17 20:17:38.008 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[1]: 153
+2025-10-17 20:17:38.008 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    W  Invalid weight data size: 2
+2025-10-17 20:17:38.008 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:38.008 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:38.008 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Read command write success: false
+2025-10-17 20:17:38.009 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Characteristic write status: 0
+2025-10-17 20:17:38.172 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Value [B@148ef07
+2025-10-17 20:17:38.173 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Properties 24
+2025-10-17 20:17:38.178 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  parseWeightData: 51 71 1D 03 18 09 19 0C
+2025-10-17 20:17:38.178 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Received Weight Data (8 bytes):
+2025-10-17 20:17:38.178 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[0]: 81
+2025-10-17 20:17:38.178 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[1]: 113
+2025-10-17 20:17:38.178 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[2]: 29
+2025-10-17 20:17:38.178 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[3]: 3
+2025-10-17 20:17:38.178 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[4]: 24
+2025-10-17 20:17:38.178 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[5]: 9
+2025-10-17 20:17:38.178 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[6]: 25
+2025-10-17 20:17:38.178 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[7]: 12
+2025-10-17 20:17:38.178 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    W  Invalid weight data size: 8
+2025-10-17 20:17:38.178 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:38.178 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:38.180 25300-26573 BLE                     com.techrevhealth.docvoicepatient    D  Read command write success: true
+2025-10-17 20:17:38.180 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Value [B@b4c1834
+2025-10-17 20:17:38.180 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Properties 24
+2025-10-17 20:17:38.181 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  parseWeightData: 22 01 01 B7 02 D0 1E 01
+2025-10-17 20:17:38.181 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Received Weight Data (8 bytes):
+2025-10-17 20:17:38.181 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[0]: 34
+2025-10-17 20:17:38.181 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[1]: 1
+2025-10-17 20:17:38.181 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[2]: 1
+2025-10-17 20:17:38.181 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[3]: 183
+2025-10-17 20:17:38.181 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[4]: 2
+2025-10-17 20:17:38.181 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[5]: 208
+2025-10-17 20:17:38.181 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[6]: 30
+2025-10-17 20:17:38.181 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[7]: 1
+2025-10-17 20:17:38.181 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    W  Invalid weight data size: 8
+2025-10-17 20:17:38.181 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:38.181 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:38.181 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Read command write success: false
+2025-10-17 20:17:38.181 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Value [B@afe565d
+2025-10-17 20:17:38.181 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Properties 24
+2025-10-17 20:17:38.182 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  parseWeightData: 00 50 00 B0 00 00 00 00
+2025-10-17 20:17:38.182 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Received Weight Data (8 bytes):
+2025-10-17 20:17:38.182 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[0]: 0
+2025-10-17 20:17:38.182 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[1]: 80
+2025-10-17 20:17:38.182 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[2]: 0
+2025-10-17 20:17:38.182 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[3]: 176
+2025-10-17 20:17:38.182 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[4]: 0
+2025-10-17 20:17:38.182 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[5]: 0
+2025-10-17 20:17:38.182 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[6]: 0
+2025-10-17 20:17:38.182 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[7]: 0
+2025-10-17 20:17:38.182 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    W  Invalid weight data size: 8
+2025-10-17 20:17:38.182 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:38.182 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:38.182 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Read command write success: false
+2025-10-17 20:17:38.182 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Value [B@5894bd2
+2025-10-17 20:17:38.182 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Properties 24
+2025-10-17 20:17:38.184 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  parseWeightData: 00 00 00 00 00 00 00 00
+2025-10-17 20:17:38.184 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Received Weight Data (8 bytes):
+2025-10-17 20:17:38.184 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[0]: 0
+2025-10-17 20:17:38.184 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[1]: 0
+2025-10-17 20:17:38.184 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[2]: 0
+2025-10-17 20:17:38.184 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[3]: 0
+2025-10-17 20:17:38.184 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[4]: 0
+2025-10-17 20:17:38.184 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[5]: 0
+2025-10-17 20:17:38.184 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[6]: 0
+2025-10-17 20:17:38.184 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[7]: 0
+2025-10-17 20:17:38.184 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    W  Invalid weight data size: 8
+2025-10-17 20:17:38.184 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:38.184 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:38.184 25300-26573 BLE                     com.techrevhealth.docvoicepatient    D  Read command write success: false
+2025-10-17 20:17:38.184 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Value [B@6fb74a3
+2025-10-17 20:17:38.184 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  onCharacteristicChanged: Properties 24
+2025-10-17 20:17:38.185 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  parseWeightData: A5 99
+2025-10-17 20:17:38.185 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Received Weight Data (2 bytes):
+2025-10-17 20:17:38.185 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[0]: 165
+2025-10-17 20:17:38.185 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  Byte[1]: 153
+2025-10-17 20:17:38.185 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    W  Invalid weight data size: 2
+2025-10-17 20:17:38.185 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  chooseReadCommand:
+2025-10-17 20:17:38.185 25300-26600 BleRpmManager           com.techrevhealth.docvoicepatient    D  buildReadWeightMachineCommand:
+2025-10-17 20:17:38.185 25300-26600 BLE                     com.techrevhealth.docvoicepatient    D  Read command write success: false
+2025-10-17 20:17:38.185 25300-26573 BleRpmManager           com.techrevhealth.docvoicepatient    D  Characteristic write status: 0
+2025-10-17 20:17:46.937 25300-26573 BluetoothGatt           com.techrevhealth.docvoicepatient    D  onConnectionUpdated() - Device=C0:26:DA:28:C4:75 interval=39 latency=1 timeout=750 status=0

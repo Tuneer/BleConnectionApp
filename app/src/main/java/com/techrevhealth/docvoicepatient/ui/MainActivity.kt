@@ -1,5 +1,5 @@
 package com.techrevhealth.docvoicepatient.ui
-
+ 
 import android.Manifest
 import android.app.Activity
 import android.app.ComponentCaller
@@ -44,6 +44,7 @@ class MainActivity : AppCompatActivity(), SearchingDialogFragment.BleDialogListe
         val manager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         manager.adapter
     }
+    private lateinit var enableBtLauncher: ActivityResultLauncher<Intent>
 
     //private lateinit var permissionLauncher: ActivityResultLauncher<Array<String>>
 
@@ -75,6 +76,23 @@ class MainActivity : AppCompatActivity(), SearchingDialogFragment.BleDialogListe
         }
     }
 
+    private val screenStateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            when (intent?.action) {
+                Intent.ACTION_SCREEN_OFF -> {
+                    Log.d(TAG, "Screen turned off - stopping BLE manager")
+                    bleManager.stop()
+                }
+                Intent.ACTION_SCREEN_ON -> {
+                    Log.d(TAG, "Screen turned on - restarting BLE manager")
+                    if (!isFinishing && !isDestroyed) {
+                        checkBluetoothEnabled()
+                    }
+                }
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -86,6 +104,14 @@ class MainActivity : AppCompatActivity(), SearchingDialogFragment.BleDialogListe
         registerReceiver(
             bluetoothStateReceiver,
             IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+        )
+
+        registerReceiver(
+            screenStateReceiver,
+            IntentFilter().apply {
+                addAction(Intent.ACTION_SCREEN_OFF)
+                addAction(Intent.ACTION_SCREEN_ON)
+            }
         )
 
         bleManager = BleRpmManager(this, object : BleRpmManager.BleRpmListener {
@@ -130,19 +156,17 @@ class MainActivity : AppCompatActivity(), SearchingDialogFragment.BleDialogListe
             }
         })
 
-//        // Initialize the permission launcher
-//        permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-//            val allGranted = permissions.entries.all { it.value }
-//            if (allGranted) {
-//                // Permissions granted
-//                Log.d(TAG, "onCreate: Permissions granted")
-//                showSearchingDialog()
-//            } else {
-//                // Permissions denied, show rationale dialog
-//                Log.d(TAG, "onCreate: Permissions not granted")
-//                showPermissionRationale()
-//            }
-//        }
+
+        // Initialize ActivityResultLauncher for Bluetooth enablement
+        enableBtLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                Log.d(TAG, "Bluetooth enabled")
+                checkAndRequestPermissions() // After enabling Bluetooth, check permissions
+            } else {
+                showBluetoothEnableRequiredDialog() // If user denies enabling Bluetooth
+            }
+        }
+
 
         checkBluetoothEnabled()
 
@@ -154,20 +178,23 @@ class MainActivity : AppCompatActivity(), SearchingDialogFragment.BleDialogListe
             return
         }
         if (!bluetoothAdapter!!.isEnabled) {
+//            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+//            if (ActivityCompat.checkSelfPermission(
+//                    this,
+//                    Manifest.permission.BLUETOOTH_CONNECT
+//                ) != PackageManager.PERMISSION_GRANTED
+//            ) {
+//                // TODO: Consider calling
+//                //    ActivityCompat#requestPermissions
+//                // here to request the missing permissions, and then overriding
+//                // to handle the case where the user grants the permission. See the documentation
+//                // for ActivityCompat#requestPermissions for more details.
+//                return
+//            }
+//            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
+
             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-            if (ActivityCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.BLUETOOTH_CONNECT
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                return
-            }
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
+            enableBtLauncher.launch(enableBtIntent) // Request to enable Bluetooth
         } else {
             Log.d(TAG, "checkBluetoothEnabled: bluetooth Already Enabled.")
             checkAndRequestPermissions()
@@ -214,38 +241,46 @@ class MainActivity : AppCompatActivity(), SearchingDialogFragment.BleDialogListe
     private fun checkAndRequestPermissions() {
         if (PermissionHelper.hasAllPermissions(this)) {
             Log.d(TAG, "checkAndRequestPermissions: All Permission Given")
+            // Permissions granted and Bluetooth enabled, start searching directly
             showSearchingDialog()
         } else {
             Log.d(TAG, "checkAndRequestPermissions: All Permission NotGiven")
+            // Only request permissions if not granted
             requestPermissions()
         }
     }
 
-
     private fun requestPermissions() {
-        ActivityCompat.requestPermissions(
-            this,
-            PermissionHelper.getRequiredPermissions(),
-            REQUEST_PERMISSIONS
-        )
+        val permissions = PermissionHelper.getRequiredPermissions()
+
+        // Otherwise, directly request permissions
+        Log.d(TAG, "requestPermissions: Requesting permissions")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            requestPermissions(permissions, REQUEST_PERMISSIONS)
+        }else {
+            ActivityCompat.requestPermissions(this, permissions, REQUEST_PERMISSIONS)
+        }
+
     }
 
     private fun showPermissionRationale() {
         if (permissionRationaleDialog?.isShowing == true) return
 
-        if (PermissionHelper.hasAllPermissions(this)) {
-            showSearchingDialog() // Skip dialog if permissions are already granted
-            return
-        }
-
+        // Only show rationale dialog if permissions are actually denied
+        // Don't show if permissions are already granted
         permissionRationaleDialog = AlertDialog.Builder(this)
             .setTitle("Permissions required")
             .setMessage("This app needs Bluetooth and Location permissions to scan and connect to medical devices. Without these, the app cannot function.")
             .setCancelable(false)
-            .setPositiveButton("Grant Permissions") { _, _ ->
+            .setPositiveButton("Grant Permissions") { dialog, _ ->
+                Log.d(TAG, "Grant Permissions button clicked")
+                dialog.dismiss()
+                permissionRationaleDialog = null
                 requestPermissions()
             }
-            .setNegativeButton("Exit App") { _, _ ->
+            .setNegativeButton("Exit App") { dialog, _ ->
+                dialog.dismiss()
+                permissionRationaleDialog = null
                 finishAffinity()
             }
             .show()
@@ -255,11 +290,11 @@ class MainActivity : AppCompatActivity(), SearchingDialogFragment.BleDialogListe
         Log.d(TAG, "showSearchingDialog: searching started")
         if (searchingDialog?.isAdded == true) return
 
-        searchingDialog = SearchingDialogFragment().apply {
-            setBleManager(bleManager)
-            setBleListener(this@MainActivity)
-        }
         if (!isFinishing && !isDestroyed) {
+            searchingDialog = SearchingDialogFragment().apply {
+                setBleManager(bleManager)
+                setBleListener(this@MainActivity)
+            }
             Log.d(TAG, "showSearchingDialog: searching Dialog Opens")
             searchingDialog?.show(supportFragmentManager, "SearchingDialog")
         }
@@ -268,6 +303,7 @@ class MainActivity : AppCompatActivity(), SearchingDialogFragment.BleDialogListe
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(bluetoothStateReceiver)
+        unregisterReceiver(screenStateReceiver)
 
         permissionRationaleDialog?.dismiss()
         permissionRationaleDialog = null
@@ -297,9 +333,11 @@ class MainActivity : AppCompatActivity(), SearchingDialogFragment.BleDialogListe
 
             if (allPermissionsGranted) {
                 Log.d(TAG, "All permissions granted!")
+                // Permissions granted, now start searching directly since Bluetooth is already enabled
                 showSearchingDialog()
             } else {
-                showPermissionRationale() // Show the rationale dialog
+                // Permissions denied, show rationale dialog to try again
+                showPermissionRationale()
             }
         }
     }
@@ -340,9 +378,11 @@ class MainActivity : AppCompatActivity(), SearchingDialogFragment.BleDialogListe
             searchingDialog?.dismissAllowingStateLoss()
             searchingDialog = null
 
-            Handler(Looper.getMainLooper()).postDelayed({
-                checkBluetoothEnabled()
-            }, 10000) // delay must be >= 600ms to be safe
+            if (!isFinishing && !isDestroyed) {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    checkBluetoothEnabled()
+                }, 10000) // delay must be >= 600ms to be safe
+            }
         }
     }
 
@@ -351,9 +391,11 @@ class MainActivity : AppCompatActivity(), SearchingDialogFragment.BleDialogListe
         searchingDialog?.dismissAllowingStateLoss()
         searchingDialog = null
 
-        Handler(Looper.getMainLooper()).postDelayed({
-            checkBluetoothEnabled()
-        }, 15000) // delay must be >= 600ms to be safe
+        if (!isFinishing && !isDestroyed) {
+            Handler(Looper.getMainLooper()).postDelayed({
+                checkBluetoothEnabled()
+            }, 15000) // delay must be >= 600ms to be safe
+        }
     }
 
 }

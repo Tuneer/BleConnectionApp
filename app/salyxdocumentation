@@ -1,0 +1,151 @@
+Perfect 👍 — since your main focus is on the **Excel file (`Developer Reference Guide - DocVoice 1.1B.xlsx`)**, here’s a **detailed breakdown and technical analysis** of what it contains and how it relates to the DocVoice Devboard operation.
+
+---
+
+## 🧾 **Developer Reference Guide – DocVoice 1.1B (Excel)**
+
+*(This is the internal firmware–BLE interface document for the DocVoice Devboard.)*
+It’s designed for **mobile app developers and firmware engineers** to integrate with the board via **Bluetooth Low Energy (BLE)**.
+
+---
+
+### 🗂 **Workbook Structure & Purpose**
+
+| **Sheet Name**                         | **Purpose / Content Summary**                                                                                                                                                                                                |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1️⃣ App Dev Guide**                  | Defines **state machine flow** and **command sequences** to move the device between functional states (Idle → Measuring → Transmitting). Lists all command bytes to send over BLE and expected responses.                    |
+| **2️⃣ Error Codes**                    | Lists all **firmware-level error codes** returned by the device. Each code (e.g., `0x01`, `0x02`, etc.) maps to a descriptive meaning (sensor fault, BLE timeout, checksum error, etc.).                                     |
+| **3️⃣ BLE GATT Characteristics**       | The most critical sheet — defines **BLE Services & Characteristics** including UUIDs, read/write/notify properties, data formats, and expected responses. These characteristics correspond to sensors and control functions. |
+| **4️⃣ Device Settings Byte Structure** | Explains how configuration bytes are formatted — allows the app to write settings such as sampling rate, LED behavior, advertising intervals, and PPG mode.                                                                  |
+| **5️⃣ State Table**                    | Shows all possible **device states**, what triggers state transitions, and the conditions for moving between them (e.g., “Button pressed → Wake”, “No activity 5 min → Sleep”).                                              |
+
+---
+
+## 🔧 **1. App Dev Guide – BLE Command Workflow**
+
+This defines **how the mobile app communicates with the device** step-by-step.
+
+| **Stage**         | **Command Sent (Hex)** | **Expected Response** | **Description / Function**                    |
+| ----------------- | ---------------------- | --------------------- | --------------------------------------------- |
+| Initialize        | `0x01 0x00`            | ACK (`0xAA`)          | Initializes BLE connection and clears buffer. |
+| Start Advertising | `0x02 0x01`            | OK                    | Starts BLE broadcast.                         |
+| Begin Measurement | `0x10 0x01`            | “Measuring”           | Activates PPG + Temp sensors.                 |
+| Stop Measurement  | `0x10 0x00`            | “Stopped”             | Stops ongoing measurement.                    |
+| Read Battery      | `0x20 0x00`            | 1-byte level (0–100%) | Reads current battery percentage.             |
+| Factory Reset     | `0x30 0x01`            | OK                    | Clears all stored config + BLE pairing data.  |
+| Sleep             | `0x40 0x01`            | “Sleeping”            | Puts device into low-power mode.              |
+
+➡️ Notes:
+
+* All commands are sent over **BLE write** to a “Control Characteristic.”
+* Each response is received via **notification**.
+* This state machine ensures the device cannot jump from `Idle` → `Transmit` without going through `Measure`.
+
+---
+
+## ⚠️ **2. Error Codes**
+
+Each error code represents a condition detected by the firmware.
+For example:
+
+| **Error Code (Hex)** | **Meaning**              | **Triggered When**                         |
+| -------------------- | ------------------------ | ------------------------------------------ |
+| `0x00`               | OK / No Error            | Normal operation                           |
+| `0x01`               | Sensor Not Found         | PPG or Temp sensor unresponsive            |
+| `0x02`               | BLE Timeout              | No response from app within timeout window |
+| `0x03`               | Invalid Command          | Unknown or malformed BLE command           |
+| `0x04`               | Measurement Overflow     | Data buffer full or unread                 |
+| `0x05`               | Battery Low              | <3.5V threshold reached                    |
+| `0x06`               | Checksum Error           | Wrong packet integrity                     |
+| `0x07`               | Flash Write Error        | Error saving settings to EEPROM            |
+| `0x08`               | Sensor Error (PPG)       | Hardware fault or no finger detected       |
+| `0x09`               | Temperature Sensor Fault | Sensor disconnected or unstable            |
+
+➡️ The **mobile app should display readable messages** when these codes appear.
+
+---
+
+## 📶 **3. BLE GATT Characteristics**
+
+The Devboard exposes multiple **GATT Services** — grouped by function.
+
+| **Service**       | **Characteristic Name** | **UUID (example)** | **Properties** | **Function / Description**                                           |
+| ----------------- | ----------------------- | ------------------ | -------------- | -------------------------------------------------------------------- |
+| `Battery Service` | `Battery Level`         | `0x2A19`           | Read / Notify  | Reports % battery                                                    |
+| `Device Info`     | `Device ID`             | `0x2A23`           | Read           | Unique ID for board                                                  |
+| `Health Data`     | `PPG Sensor Data`       | `C1B1-...`         | Notify         | Sends live heart rate/PPG data                                       |
+|                   | `Temperature Data`      | `C1B2-...`         | Notify         | Sends temperature readings                                           |
+|                   | `Sensor Status`         | `C1B3-...`         | Read           | Indicates sensor operational status                                  |
+| `Control Service` | `Command`               | `C1C1-...`         | Write          | App sends control commands (start/stop/reset)                        |
+| `Config Service`  | `Settings`              | `C1D1-...`         | Write/Read     | App writes configuration bytes                                       |
+| `Error Service`   | `Error Code`            | `C1E1-...`         | Notify         | Sends current error code on fault                                    |
+| `System`          | `State`                 | `C1F1-...`         | Read/Notify    | Indicates current system state (Idle, Measuring, Transmitting, etc.) |
+
+➡️ Each characteristic has **read/write permissions** defined and must be subscribed for notifications in the app.
+
+---
+
+## ⚙️ **4. Device Settings Byte Structure**
+
+This allows configuration of sensors and system parameters via BLE writes.
+
+| **Byte Offset** | **Parameter**        | **Value Range** | **Default** | **Description**                         |
+| --------------- | -------------------- | --------------- | ----------- | --------------------------------------- |
+| 0               | PPG Sampling Rate    | `0x00`–`0x03`   | `0x02`      | 0 = 10Hz, 1 = 25Hz, 2 = 50Hz, 3 = 100Hz |
+| 1               | Temp Sampling Rate   | `0x00`–`0x02`   | `0x01`      | 0 = 1Hz, 1 = 2Hz, 2 = 5Hz               |
+| 2               | LED Mode             | `0x00`–`0x03`   | `0x01`      | Controls LED intensity pattern          |
+| 3               | BLE Adv. Interval    | `0x00`–`0x05`   | `0x02`      | Interval for advertisement packets      |
+| 4               | Sleep Timeout        | `0x00`–`0x0A`   | `0x05`      | Time in minutes before auto-sleep       |
+| 5               | Measurement Duration | `0x00`–`0x3C`   | `0x1E`      | Duration (seconds) for auto-stop        |
+| 6               | Reserved             | —               | —           | Future sensor integration               |
+| 7               | Checksum             | Calculated      | —           | Data integrity validation               |
+
+➡️ These bytes are written to the **“Settings Characteristic”** under the Config Service.
+
+---
+
+## 🔄 **5. State Table**
+
+This sheet explains **device operational states** and transitions.
+
+| **State**               | **Meaning**                   | **Triggered By**        | **Next State**   |
+| ----------------------- | ----------------------------- | ----------------------- | ---------------- |
+| **0x00 – Boot**         | Device startup initialization | Power On                | Idle             |
+| **0x01 – Idle**         | Ready, BLE advertising        | Power connected         | Measure          |
+| **0x02 – Measuring**    | PPG + Temp active             | Command `0x10`          | Transmitting     |
+| **0x03 – Transmitting** | BLE notifications active      | After measurement ready | Idle             |
+| **0x04 – Sleep**        | Low power mode                | 5 min inactivity        | Idle (on wake)   |
+| **0x05 – Error**        | Fault state                   | Error detected          | Idle after reset |
+
+➡️ Transitions follow the App Dev Guide commands and can be visualized as:
+
+```
+Boot → Idle → Measuring → Transmitting → Idle → Sleep
+        ↘ (Error Detected) → Error → Idle
+```
+
+---
+
+## 🧩 **Integration Tips for Developers**
+
+* Always **initialize connection** using the Command Characteristic before reading sensor data.
+* Subscribe to **Notification Characteristics** for PPG, Temperature, and Error Codes.
+* Handle **Error Code notifications** gracefully — e.g., auto-retry on `0x02` BLE Timeout.
+* Always write correct **checksum** when configuring settings.
+* To reset: send `0x30 0x01` (factory reset) or long-press the button >5s.
+
+---
+
+## 📱 **Typical BLE Workflow**
+
+1. Connect → Discover Services.
+2. Read Device Info + Battery.
+3. Write Configuration Bytes (if needed).
+4. Send “Start Measurement” Command.
+5. Subscribe to PPG + Temp notifications.
+6. Receive periodic sensor data.
+7. On finish, send “Stop Measurement.”
+8. Read Error Code (if any).
+9. Disconnect or Sleep.
+
+

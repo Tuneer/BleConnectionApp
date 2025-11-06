@@ -1,0 +1,44 @@
+		* Write: sending data from smartphone to the board				NO LEDS			
+		* Notify: smartphone received data from the board via callback				INAPPLICABLE FUNCTIONS/PROPERTIES			
+		All notify requires BLE connected				PASSKEY REQUIRED			
+BLE Default Name: SAL-IDNUMBER	<- this name will change 	Firmware Version: 1.1.0	<- this name will change 						
+Service	Characteristic	UUID	Properties	Tags	Description	Write	Value	Notify timing	LED status
+Battery Service (0000180f-0000-1000-8000-00805f9b34fb)	Battery Level	00002a19-0000-1000-8000-00805f9b34fb	read Notify		Battery level		Battery percentage in byte format	every 10 seconds or once enter s9 state	
+Device Information (0000180a-0000-1000-8000-00805f9b34fb)	Model Number String	00002a24-0000-1000-8000-00805f9b34fb	read 		Board model		"""DocVoice Devboard"""	once after connected	
+	Serial Number String	00002a25-0000-1000-8000-00805f9b34fb	read 		Board ID number		"""DDMMYYIDID"""	once after connected	
+	Firmware Revision String	00002a26-0000-1000-8000-00805f9b34fb	read 		Board's current firmware revision		"""1.0.0"""	once after connected & after OTA update	
+	Hardware Revision String	00002a27-0000-1000-8000-00805f9b34fb	read 		Board's hardware revision		"""1.0"""	once after connected	
+	Manufacture Name String	00002a29-0000-1000-8000-00805f9b34fb	read 		Board's manufacturer name		"""Salvica Health"""	once after connected	
+Custom Service (00000000-0000-0000-0000-000000000000)	User Control	00000001-0000-0000-0000-000000000000	Read, Write, and Notify	STATUS_TAG = 's'	Off		"""s0"""	"After issuing ""c0"" command"	
+					Disconnected		"""s1"""	"app should never receive this value because it is sent after BLE is disconnected
+It is solely for firmware state machine "	Blue LED blinks fast if publicly advertises, otherwise blink slow
+					Unverified		"""s2"""	After BLE connected	
+					Ready		"""s3"""	 correct passkey is submitted	
+					Initializing sensors		"""s4"""	"After issuing ""c1"" command"	
+					Sensor Error		"""s5"""	"At least 1 error is occurred during ""s4"" state. 
+Read Error Code characteristic for specific error code"	Red LED blinks fast
+					Cannot Detect User's Skin		"""s6"""	"After ""s5"" state and sensor couldn't detect user skin"	Red LED blinks slow
+					Working/Data collection		"""s7"""	"After ""s6"" state and device has detected user skin"	
+					Sleep between dataset		"""s8"""	"current dataset is finished, device will sleep until next dataset.
+BLE connection is sustained"	
+				ERROR_TAG = 'e'	Error code such as sensor error, settings error		32 bit number (little endian), referring to Error Code 	"_Once a new error occurred in ""s4"" state
+_While updating device settings
+_Invalid Command"	
+				KEY_TAG = 'k'	Enter passkey upon connection	"""k1234"""			
+				COMMAND_TAG = 'c'	"Start the dataset (can only use in ""s3"" state)"	"""c1"""			
+					"Stop the current dataset (can only use in any state between ""s4"" and ""s8"")"	"""c2"""			
+					Factory reset (can use at anytime)	"""c3"""			
+					Turn off the device (can use at anytime)	"""c0"""			
+				SETTING_TAG = 't'	Changing settings of device (only when device state is Ready)	Device Settings Byte Structure (little endian)			
+	Vitals Data	00000002-0000-0000-0000-000000000000	Notify		PPG		"Each sample always contains 9 bytes.
+Each sample is PPG (IR, Red, Green)
+In that Order
+Data is left Justified"	about every 67.5 ms	
+	Temperature	00000003-0000-0000-0000-000000000000	Notify		Temperature data		"Degree Celcius but being multiplied by 100 to be an integer
+0x0E38 -> 3640 = 36.40C degree"	"start command is issued in Command characteristic, every 10 seconds.
+Update frequency can be changed in Settings"	
+									
+									
+									
+									
+Confidentiality Notice: This document is intended solely for the internal use of DocVoice and its parent company. It contains proprietary and confidential information that must not be shared, distributed, or disclosed to any external parties without prior written consent from Salvica.									

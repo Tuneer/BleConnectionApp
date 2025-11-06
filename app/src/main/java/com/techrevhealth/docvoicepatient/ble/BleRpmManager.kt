@@ -28,6 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
+import kotlin.Suppress
 
 
 class BleRpmManager(
@@ -58,221 +59,20 @@ class BleRpmManager(
     private val handler = Handler(Looper.getMainLooper())
 
     private var currentDeviceData: RpmDeviceData? = null
+    private val brandManager = BrandManager()
+
+    // GATT busy flag to prevent concurrent operations (matching JS implementation)
+    private var gattBusy = false
 
     fun getCurrentDeviceData(): RpmDeviceData? = currentDeviceData
 
 
-    val command = byteArrayOf(
-        0x26.toByte(), // Command ID
-        0x00.toByte(), // Index (high byte)
-        0x00.toByte(), // Index (low byte)
-        0x00.toByte(), // filler
-        0x00.toByte(), // filler
-        0x00.toByte(), // filler
-        0x00.toByte(), // filler
-        0x00.toByte()  // filler
-    )
 
-    private val readCommand = byteArrayOf(0x49, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
-
-    private fun buildReadCommand(): ByteArray {
-        Log.d(TAG, "buildReadCommand: ")
-        val command = byteArrayOf(
-            0x51.toByte(), // Start
-            0x49.toByte(), // Command: Read device status
-            0x00.toByte(), // Data 0
-            0x00.toByte(), // Data 1
-            0x00.toByte(), // Data 2
-            0x00.toByte(), // Data 3
-            0xA3.toByte(), // Stop
-            0x00.toByte()  // Placeholder for checksum
-        )
-        command[7] = calculateChecksum(command)
-        return command
-    }
-
-    private fun buildReadWeightMachineCommand(): ByteArray {
-        Log.d(TAG, "buildReadWeightMachineCommand: ")
-        val command = byteArrayOf(
-            0x51.toByte(), // Start byte
-            0x71.toByte(), // Command for reading weight data
-            0x02.toByte(), // Data for device type, etc.
-            0x00.toByte(), // Additional data byte
-            0x00.toByte(), // Placeholder data byte
-            0xA3.toByte(), // Stop byte
-            0x00.toByte()  // Placeholder for checksum
-        )
-        Log.d(TAG,"Sending Read Command: ${command.joinToString(" ") { "%02X".format(it) }}")
-        // Calculate checksum
-        command[6] = calculateDynamicChecksum(command)  // Modify for correct index if needed
-        Log.d(TAG, "Sending Read Command: ${command.joinToString(" ") { "%02X".format(it.toInt()) }}")
-        return command
-    }
-
-    private fun calculateDynamicChecksum(data: ByteArray): Byte {
-        var sum = 0
-        for (i in 0 until data.size-1) {
-            sum += data[i].toInt() and 0xFF
-        }
-        Log.d(TAG, "calculateDynamicChecksum: $sum")
-        return (sum and 0xFF).toByte() // Ensures the checksum is within the byte range
-    }
-
-    // Function to calculate the checksum
-    private fun calculateWeightChecksum(data: ByteArray): Byte {
-        var sum = 0
-        for (i in 0 until 34) { // Calculate sum up to the second-last byte
-            sum += data[i].toInt() and 0xFF
-        }
-        return (sum and 0xFF).toByte() // Return the checksum byte
-    }
-
-
-    private fun buildReadGlucoseTimeCommand(): ByteArray {
-        val command = byteArrayOf(
-            0x51.toByte(),         // Start
-            0x23.toByte(),         // CMD: Read time part
-            0x00.toByte(), 0x00.toByte(),   // Index (0 = latest)
-            0x00.toByte(), 0x00.toByte(),   // Unused
-            0xA3.toByte(),         // Stop
-            0x00.toByte()          // Checksum
-        )
-        command[7] = calculateChecksum(command)
-        return command
-    }
-
-    private fun buildReadGlucoseResultCommand(): ByteArray {
-        Log.d(TAG, "buildReadGlucoseResultCommand: ")
-        val command = byteArrayOf(
-            0x51.toByte(),
-            0x26.toByte(),         // CMD: Read result part
-            0x00.toByte(),
-            0x00.toByte(),   // Index (0 = latest)
-            0x00.toByte(),
-            0x00.toByte(),
-            0xA3.toByte(),
-            0x00.toByte()
-        )
-        command[7] = calculateChecksum(command)
-        return command
-    }
-
-    fun buildReadBpResultCommand(): ByteArray {
-        val command = byteArrayOf(
-            0x51.toByte(),
-            0x26.toByte(),
-            0x00, 0x00, 0x00, 0x00,
-            0xA3.toByte(),
-            0x00.toByte()
-        )
-        command[7] = calculateChecksum(command)
-        return command
-    }
-
-    fun buildStopBpCommand(): ByteArray {
-        val command = byteArrayOf(
-            0x51.toByte(),
-            0x50.toByte(),
-            0x00, 0x00, 0x00, 0x00,
-            0xA3.toByte(),
-            0x00.toByte()
-        )
-        command[7] = calculateChecksum(command)
-        return command
-    }
-
-    fun buildStopWeightMachineCommand(): ByteArray {
-        val command = byteArrayOf(
-            0x51.toByte(),
-            0x50.toByte(),
-            0x00, 0x00, 0x00, 0x00,
-            0xA3.toByte(),
-            0x00.toByte()
-        )
-        command[7] = calculateChecksum(command)
-        return command
-    }
-
-    private fun buildGlucoseStopDeviceCommand(): ByteArray {
-        Log.d(TAG, "buildGlucoseStopDeviceCommand: ")
-        val command = byteArrayOf(
-            0x51.toByte(),         // Start byte
-            0x50.toByte(),         // CMD: Stop Device (Power Off)
-            0x00.toByte(),
-            0x00.toByte(),   // Reserved
-            0x00.toByte(),
-            0x00.toByte(),   // Reserved
-            0xA3.toByte(),         // Stop byte
-            0x00.toByte()          // Checksum (to be calculated)
-        )
-        command[7] = calculateChecksum(command)
-        return command
-    }
-
-    private fun clearMemoryCommand(): ByteArray {
-        val command = byteArrayOf(
-            0x51.toByte(), // Start
-            0x52.toByte(), // Command: Read device status
-            0x00.toByte(), // Data 0
-            0x00.toByte(), // Data 1
-            0x00.toByte(), // Data 2
-            0x00.toByte(), // Data 3
-            0xA3.toByte(), // Stop
-            0x00.toByte()  // Placeholder for checksum
-        )
-        command[7] = calculateChecksum(command)
-        return command
-    }
-
-    // Battery + System Info
-    private fun stopDeviceCommand(): ByteArray {
-        Log.d(TAG, "stopDeviceCommand: ")
-        val command = byteArrayOf(
-            0x51.toByte(),
-            0x50.toByte(), // Read device status
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0xA3.toByte(),
-            0x00
-        )
-        command[7] = calculateChecksum(command)
-        return command
-    }
-
-    // Battery + System Info
-    private fun buildSerialCommand(): ByteArray {
-        val command = byteArrayOf(
-            0x51.toByte(),
-            0x27.toByte(), // Read device status
-            0x00, 0x00, 0x00, 0x00,
-            0xA3.toByte(),
-            0x00
-        )
-        command[7] = calculateChecksum(command)
-        return command
-    }
-
-    private fun calculateChecksum(data: ByteArray): Byte {
-        var sum = 0
-        for (i in 0 until 7) {
-            sum += data[i].toInt() and 0xFF
-        }
-        return (sum and 0xFF).toByte()
-    }
 
 
     // Scan every 10 minutes
     private val scanIntervalMs = 2 * 1000L
     private val scanDurationMs = 15_000L // Scan for 10 seconds
-
-    private val deviceNameKeywords = listOf(
-        "FORA P20",
-        "TNG SPO2",
-        "TNG SCALE",
-        "FORA PREMIUM V10"
-    )
 
     private val scanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
@@ -295,7 +95,7 @@ class BleRpmManager(
 
             Log.d(TAG, "onScanResult: Found devices: $name")
 
-            if (deviceNameKeywords.any { keyword -> name.contains(keyword, ignoreCase = true) }) {
+            if (brandManager.shouldConnect(name)) {
                 stopScan()
                 listener.onDeviceFound(name)
                 connectToDevice(device, name)
@@ -329,7 +129,7 @@ class BleRpmManager(
 
                 Log.d(TAG, "onScanResult: Found devices: $name")
 
-                if (deviceNameKeywords.any { keyword -> name.contains(keyword, ignoreCase = true) }) {
+                if (brandManager.shouldConnect(name)) {
                     stopScan()
                     listener.onDeviceFound(name)
                     connectToDevice(device, name)
@@ -349,13 +149,17 @@ class BleRpmManager(
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
             return
         }
-        connectedGatt = device.connectGatt(context, false, gattCallback)
+
+        // For Salyx devices, try autoConnect=true to maintain connection
+        val autoConnect = connectedDeviceName?.contains("SAL-", ignoreCase = true) == true
+        connectedGatt = device.connectGatt(context, autoConnect, gattCallback)
+        Log.d(TAG, "connectToDevice: Connecting to $deviceName with autoConnect=$autoConnect")
     }
 
     private val gattCallback = object : BluetoothGattCallback() {
@@ -379,13 +183,32 @@ class BleRpmManager(
 
                     }
 
-                    gatt.requestMtu(50);
+                    // Try larger MTU for Salyx devices to prevent fragmentation
+                    val mtuSize = if (connectedDeviceName?.contains("SAL-", ignoreCase = true) == true) 247 else 50
+                    gatt.requestMtu(mtuSize);
 
 
 
                 }
                 BluetoothProfile.STATE_DISCONNECTED -> {
-                    Log.d("BleRpmManager", "Disconnected from $connectedDeviceName")
+                    Log.d("BleRpmManager", "Disconnected from $connectedDeviceName, status: $status")
+
+                    // For Salyx devices, try to reconnect if it was an unexpected disconnect
+                    if (connectedDeviceName?.contains("SAL-", ignoreCase = true) == true &&
+                        status != BluetoothGatt.GATT_SUCCESS) {
+                        Log.w(TAG, "Unexpected disconnect from Salyx device, attempting reconnect")
+                        // Don't call listener.onDisconnected() immediately for Salyx
+                        // Try to reconnect after a short delay
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            if (connectedGatt == null) { // Only if not already reconnected
+                                Log.d(TAG, "Attempting to reconnect to Salyx device")
+                                // The autoConnect flag should handle reconnection
+                                scheduleNextScan() // Fallback to scanning if auto-reconnect fails
+                            }
+                        }, 2000)
+                        return
+                    }
+
                     listener.onDisconnected()
                     connectedGatt?.close()
                     connectedGatt = null
@@ -398,7 +221,13 @@ class BleRpmManager(
         }
 
         override fun onMtuChanged(gatt: BluetoothGatt?, mtu: Int, status: Int) {
-            Log.d(TAG,"onMtuChanged: $mtu")
+            Log.d(TAG,"onMtuChanged: $mtu, status: $status")
+
+            if (status != BluetoothGatt.GATT_SUCCESS) {
+                Log.e(TAG, "MTU change failed with status: $status")
+                return
+            }
+
              if (ActivityCompat.checkSelfPermission(
                     context,
                     Manifest.permission.BLUETOOTH_CONNECT
@@ -418,6 +247,14 @@ class BleRpmManager(
                 Log.d("BleRpmManager", "GATT Services discovered")
             }else{
                 Log.d("BleRpmManager", "GATT Services not discovered")
+            }
+
+            // For Salyx devices, use specification-compliant approach
+            if (connectedDeviceName?.contains("SAL-", ignoreCase = true) == true) {
+                CoroutineScope(Dispatchers.IO).launch {
+                    delay(500) // Wait for services to be fully discovered
+                    initializeSalyxDeviceNew(gatt)
+                }
             }
         }
 
@@ -457,7 +294,7 @@ class BleRpmManager(
                         }
 
 
-                        if (characteristic.properties == 24) {
+                        if (characteristic.properties == 24||characteristic.properties==18) {
 
                             if (characteristic.properties and
                                 BluetoothGattCharacteristic
@@ -480,26 +317,33 @@ class BleRpmManager(
                                 }
 
                                 gatt.setCharacteristicNotification(characteristic, true)
-                                gatt.readCharacteristic(characteristic)
-
-                                val descriptor = characteristic.getDescriptor(
-                                    //characteristic.uuid
-                                    UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
-                                    //00002902-0000-1000-8000-00805f9b34fb
-                                    //  UUID.fromString("00001524-1212-efde-1523-785feabcd123")
-                                    // UUID.fromString("e3a219e1-7b22-4257-a9eb-281f4fffcd83")
-                                )
-
-                                if (properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY != 0) {
-                                    descriptor.value =
-                                        BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-                                } else if (properties and BluetoothGattCharacteristic.PROPERTY_INDICATE != 0) {
-                                    descriptor.value =
-                                        BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
+                                // Only read characteristic for Salyx devices, not for notifications
+                                if (connectedDeviceName?.contains("SAL-", ignoreCase = true) == true) {
+                                    characteristic?.let {
+                                        Log.d(TAG, "onServicesDiscovered: " +
+                                                "descripters:- "+characteristic.descriptors.toString())
+                                        gatt.readCharacteristic(it)
+                                    }
                                 }
 
-                                descriptor?.let {
-                                    gatt.writeDescriptor(it)
+                                // Get the Client Characteristic Configuration Descriptor (CCCD)
+                                val descriptor = characteristic.getDescriptor(
+                                    UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
+                                    //characteristic.uuid
+                                )
+
+                                if (descriptor != null) {
+                                    if (properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY != 0) {
+                                        descriptor.value =
+                                            BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                                    } else if (properties and BluetoothGattCharacteristic.PROPERTY_INDICATE != 0) {
+                                        descriptor.value =
+                                            BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
+                                    }
+
+                                    gatt.writeDescriptor(descriptor)
+                                } else {
+                                    Log.w(TAG, "onServicesDiscovered: CCCD descriptor not found for characteristic ${characteristic.uuid}")
                                 }
 
 
@@ -533,22 +377,15 @@ class BleRpmManager(
             }
             val deviceName = gatt.device.name ?: "UNKNOWN"
 
-            when (deviceName.uppercase()) {
-                "TNG SPO2", "FORA_SPO2" -> {
-                    parseForaSpo2Data(data,gatt,characteristic)
-                }
-                "FORA P20" -> {
-                    parseBpMonitorData(data,gatt,characteristic)
-                }
-                "FORA PREMIUM V10" -> {
-                    parseGlucoseData(data,gatt,characteristic)
-                }
-                "TNG SCALE" -> {
-                    parseWeightData(data,gatt,characteristic)
-                }
-                else -> Log.w("BLE", "Unknown device: $deviceName, Raw data: ${data.joinToString()}")
-            }
-            stop()
+                    val parsedData = brandManager.parseData(data, gatt, characteristic, deviceName, context)
+                    if (parsedData != null) {
+                        currentDeviceData = parsedData
+                        listener.onDataReceived(deviceName, parsedData)
+                        // Send stop command after successful data parsing
+                        stopDeviceStatus(gatt, characteristic)
+                    } else {
+                        Log.w("BLE", "Failed to parse data for device: $deviceName, Raw data: ${data.joinToString()}")
+                    }
         }
 
 
@@ -559,8 +396,23 @@ class BleRpmManager(
             value: ByteArray,
             status: Int
         ) {
-            Log.d(TAG, "onCharacteristicRead: value: $value"+"status: "+status)
-            Log.d(TAG, "onCharacteristicRead: "+characteristic.value)
+            Log.d(TAG, "onCharacteristicRead: value: ${value.joinToString(" ") { String.format("%02X", it) }} status: $status")
+            Log.d(TAG, "onCharacteristicRead: characteristic value: ${characteristic?.value?.joinToString(" ") { String.format("%02X", it) }}")
+
+            // Handle read responses for Salyx devices
+            if (connectedDeviceName?.contains("SAL-", ignoreCase = true) == true) {
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    val parsedData = brandManager.parseData(value, gatt, characteristic, connectedDeviceName ?: "", context)
+                    if (parsedData != null) {
+                        currentDeviceData = parsedData
+                        listener.onDataReceived(connectedDeviceName ?: "", parsedData)
+                        // Send stop command after successful data parsing
+                        stopDeviceStatus(gatt, characteristic)
+                    }
+                } else {
+                    Log.w(TAG, "onCharacteristicRead: Read failed with status $status")
+                }
+            }
         }
 
         override fun onDescriptorWrite(
@@ -574,26 +426,61 @@ class BleRpmManager(
 
                 val characteristic = descriptor?.characteristic
                 characteristic?.writeType = BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
-                characteristic?.setValue(chooseReadCommand())
-                if (ActivityCompat.checkSelfPermission(
-                        context,
-                        Manifest.permission.BLUETOOTH_CONNECT
-                    ) != PackageManager.PERMISSION_GRANTED
-                ) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
-                    return
+
+                // For Salyx devices, send start measurement command after descriptor write
+                if (connectedDeviceName?.contains("SAL-", ignoreCase = true) == true) {
+                    // Find the command characteristic for Salyx devices
+                    val commandUUID = brandManager.getHandlerForDevice(connectedDeviceName ?: "")?.getCommandCharacteristicUUID()
+                    val commandCharacteristic = if (commandUUID != null) {
+                        gatt?.services?.flatMap { it.characteristics }?.find { it.uuid.toString() == commandUUID }
+                    } else {
+                        characteristic
+                    }
+
+                    // For Salyx devices: Send start measurement command (initialize was sent earlier)
+                    val readCommand = brandManager.buildReadCommand(connectedDeviceName ?: "")
+                    @Suppress("DEPRECATION")
+                    readCommand?.let { commandCharacteristic?.setValue(it) }
+
+                    if (ActivityCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.BLUETOOTH_CONNECT
+                        ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        return
+                    }
+
+                    CoroutineScope(Dispatchers.IO).launch {
+                        delay(100)
+                        val measureSuccess = gatt?.writeCharacteristic(commandCharacteristic)
+                        Log.d(TAG, "onDescriptorWrite: Start measurement command write success $measureSuccess")
+                    }
                 }
-                CoroutineScope(Dispatchers.IO).launch {
-                    delay(100)
+                else {
+                    // For non-Salyx devices, use existing logic
+                    val readCommand = brandManager.buildReadCommand(connectedDeviceName ?: "")
+                    @Suppress("DEPRECATION")
+                    readCommand?.let { characteristic?.setValue(it) }
+                    if (ActivityCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.BLUETOOTH_CONNECT
+                        ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        // TODO: Consider calling
+                        //    ActivityCompat#requestPermissions
+                        // here to request the missing permissions, and then overriding
+                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                        //                                          int[] grantResults)
+                        // to handle the case where the user grants the permission. See the documentation
+                        // for ActivityCompat#requestPermissions for more details.
+                        return
+                    }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        delay(100)
+                    }
+                    val success = gatt?.writeCharacteristic(characteristic)
+                    Log.d(TAG, "onDescriptorWrite: Success Write $success")
                 }
-                val success = gatt?.writeCharacteristic(characteristic)
-                Log.d(TAG, "onDescriptorWrite: Success Write $success")
 
             } else {
                 Log.e("BLE", "Descriptor write failed with status $status")
@@ -615,245 +502,222 @@ class BleRpmManager(
 
     }
 
-    private fun stopDeviceStatus(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
-        val chooseStopCommad = chooseStopCommand()
-        characteristic.value = chooseStopCommad
-        if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.BLUETOOTH_CONNECT
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return
-        }
-        val success = gatt.writeCharacteristic(characteristic)
-        Log.d("BLE", "Stop Device command write success: $success")
-    }
+    private fun sendInitializeCommand(gatt: BluetoothGatt?) {
+        if (gatt == null) return
 
-    private fun parseWeightData(data: ByteArray,gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
-        // Log full byte array safely
-        Log.d(TAG, "parseWeightData: ${data.joinToString(" ") { String.format("%02X", it) }}")
-        Log.d(TAG, "Received Weight Data (${data.size} bytes):")
-        for ((index, byte) in data.withIndex()) {
-            Log.d(TAG, "Byte[$index]: ${byte.toInt() and 0xFF}")
+        val commandUUID = brandManager.getHandlerForDevice(connectedDeviceName ?: "")?.getCommandCharacteristicUUID()
+        val commandCharacteristic = if (commandUUID != null) {
+            gatt.services?.flatMap { it.characteristics }?.find { it.uuid.toString() == commandUUID }
+        } else {
+            null
         }
 
-        if (data.isNotEmpty()) {
-            if (data.size < 14) {
-                Log.w(TAG, "Invalid weight data size: ${data.size}")
-             //   listener.onUserCancelled()
-                requestReadCommand(gatt, characteristic)
+        if (commandCharacteristic != null) {
+            val salyxHandler = brandManager.getHandlerForDevice(connectedDeviceName ?: "") as? com.techrevhealth.docvoicepatient.ble.SalyxHandler
+            val initCommand = salyxHandler?.buildInitializeCommand()
+            @Suppress("DEPRECATION")
+            initCommand?.let { commandCharacteristic.setValue(it) }
+
+            if (ActivityCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.BLUETOOTH_CONNECT
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
                 return
             }
 
-            when  (data[1].toInt() and 0xFF) {
-                0x52 -> {
-                    Log.d(TAG, "parseWeightData: Clear Memory Response")
-                    // Wait and send read command
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        requestReadCommand(gatt, characteristic)
-                    }, 700)
+            val success = gatt.writeCharacteristic(commandCharacteristic)
+            Log.d(TAG, "sendInitializeCommand: Initialize command write success $success")
+        } else {
+            Log.w(TAG, "sendInitializeCommand: Command characteristic not found")
+        }
+    }
+
+    // NEW: Specification-compliant Salyx device initialization (matching JS implementation)
+    private fun initializeSalyxDeviceNew(gatt: BluetoothGatt?) {
+        if (gatt == null || connectedDeviceName?.contains("SAL-", ignoreCase = true) != true) return
+
+        Log.d(TAG, "initializeSalyxDeviceNew: Starting specification-compliant initialization")
+
+        val salyxHandler = brandManager.getHandlerForDevice(connectedDeviceName ?: "") as? com.techrevhealth.docvoicepatient.ble.SalyxHandler
+        if (salyxHandler == null) {
+            Log.e(TAG, "initializeSalyxDeviceNew: SalyxHandler not found")
+            return
+        }
+
+        // Get the correct User Control characteristic for commands
+        val userControlUUID = salyxHandler.getUserControlCharacteristicUUID()
+        val userControlChar = gatt.services?.flatMap { it.characteristics }?.find { it.uuid.toString() == userControlUUID }
+
+        if (userControlChar == null) {
+            Log.e(TAG, "initializeSalyxDeviceNew: User Control characteristic not found")
+            return
+        }
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // Step 1: Enable notifications for all data characteristics first (matching JS order)
+                enableSalyxNotificationsNew(gatt)
+
+                delay(500) // Wait for notifications to be set up
+
+                // Step 2: Check device state by reading User Control characteristic
+                Log.d(TAG, "initializeSalyxDeviceNew: Reading device state")
+                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
+                    val readSuccess = gatt.readCharacteristic(userControlChar)
+                    Log.d(TAG, "initializeSalyxDeviceNew: Read device state success: $readSuccess")
                 }
-                0x71 -> {
-                    Log.d(TAG, "parseWeightData: Weight Data")
-                    val recordIndex = ((data[4].toInt() and 0xFF) shl 8) or (data[3].toInt() and 0xFF)
-                    val year =  (data[5].toInt() and 0xFF)
-                    val month = data[6].toInt() and 0xFF
-                    val day = data[7].toInt() and 0xFF
-                    val hour = data[8].toInt() and 0xFF
-                    val minute = data[9].toInt() and 0xFF
 
-                    val weightRaw = ((data[17].toInt() and 0xFF) shl 8) or (data[18].toInt() and
-                            0xFF)
-                    val weightKg = weightRaw / 10.0
+                delay(1000) // Wait for state response
 
-                    val bmi = data[21].toInt() and 0xFF
+                // Step 3: Handle passkey requirement if device is unverified (s2 state)
+                // In the JS implementation, passkey is handled separately via user input
+                // For now, we'll assume the device is already verified or handle it later
 
-                    Log.d("FORA_WEIGHT", "Record #$recordIndex")
-                    Log.d("FORA_WEIGHT", "Timestamp: $year-$month-$day $hour:$minute")
-                    Log.d("FORA_WEIGHT", "Weight: $weightKg kg")
-                    Log.d("FORA_WEIGHT", "BMI: $bmi")
+                // Step 4: Send start dataset command (c1) when device is in ready state (s3)
+                // In JS: writeCommand('1') which sends "c1"
+                Log.d(TAG, "initializeSalyxDeviceNew: Sending start dataset command")
 
-                    currentDeviceData = RpmDeviceData(
-                        deviceName = connectedDeviceName ?: "Unknown",
-                        weight = weightKg,
-                        bmi = bmi.toDouble())
-                    stopDeviceStatus(gatt, characteristic)
+                // Wait for GATT to not be busy (matching JS implementation)
+                while (gattBusy) {
+                    delay(10)
                 }
+                gattBusy = true
+
+                val startCommand = salyxHandler.buildStartDatasetCommand()
+                @Suppress("DEPRECATION")
+                userControlChar.setValue(startCommand)
+
+                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
+                    val writeSuccess = gatt.writeCharacteristic(userControlChar)
+                    Log.d(TAG, "initializeSalyxDeviceNew: Start dataset command write success: $writeSuccess")
+                }
+
+                gattBusy = false
+
+                // Device will now start sending PPG data via notifications (matching JS flow)
+
+            } catch (e: Exception) {
+                Log.e(TAG, "initializeSalyxDeviceNew: Error during initialization", e)
+                gattBusy = false
             }
-
         }
-
-        currentDeviceData?.let { listener.onDataReceived(connectedDeviceName ?: "Unknown", it) }
     }
 
-    private fun parseGlucoseData(data: ByteArray, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
-        Log.d(TAG, "parseGlucoseData: 0: "+data[0].toInt()+" 1: "+data[1].toInt()+" " +
-                "2: " + " "+data[2].toInt()+" 5: "+data[5].toInt()+" 6: "+data[6].toInt()+" 3: " +
-                ""+data[3].toInt()+" 4: "+data[4].toInt())
+    // NEW: Enable notifications for specification-compliant characteristics (matching JS order)
+    private fun enableSalyxNotificationsNew(gatt: BluetoothGatt?) {
+        if (gatt == null) return
 
-        if (data.isNotEmpty()) {
-           when (data[1].toInt() and 0xFF) {
-               0x52 -> {
-                   Log.d(TAG, "parseGlucoseData: Clear Memory Response")
-                   // Wait and send read command
-                   Handler(Looper.getMainLooper()).postDelayed({
-                       requestReadCommand(gatt, characteristic)
-                   }, 700) // delay must be >= 600ms to be safe
-               }
-               0x23 -> {
-                   Log.d(TAG, "parseGlucoseData: TimeStamp: ")
-                   val year = (data[1].toInt() shr 1) + 2000
-                   val month = ((data[1].toInt() and 0x01) shl 3) or (data[0].toInt() shr 5)
-                   val day = data[0].toInt() and 0x1F
-                   val minute = data[2].toInt() and 0x3F
-                   val hour = data[3].toInt() and 0x1F
+        Log.d(TAG, "enableSalyxNotificationsNew: Setting up notifications for spec-compliant characteristics")
 
-                   Log.d(TAG, "parseGlucoseData: Date: $day/$month/$year")
-                   Log.d(TAG, "parseGlucoseData: Time: $hour:$minute")
+        val salyxHandler = brandManager.getHandlerForDevice(connectedDeviceName ?: "") as? com.techrevhealth.docvoicepatient.ble.SalyxHandler
+        if (salyxHandler == null) return
 
-                   // Wait and send read command
-                   Handler(Looper.getMainLooper()).postDelayed({
-                       requestReadCommand(gatt, characteristic)
-                   }, 700) // delay must be >= 600ms to be safe
+        // Enable notifications in the same order as JS implementation
+        val notificationUUIDs = listOf(
+            salyxHandler.getUserControlCharacteristicUUID(), // Control (status updates) - first in JS
+            salyxHandler.getVitalsDataCharacteristicUUID(),  // Data (PPG) - second in JS
+            salyxHandler.getTemperatureCharacteristicUUID(), // Temperature - third in JS
+            "00002a19-0000-1000-8000-00805f9b34fb"          // Battery Level (standard)
+        )
 
-               }
-               0x26 -> {
-                   Log.d(TAG, "parseGlucoseData: Data: ")
-                   val spo2 = data[2].toInt() and 0xFF
-                   val pulse = data[5].toInt() and 0xFF
-                   Log.d("FORA PREMIUM V10", "Glucose: $spo2 mg/dl, Values 5: $pulse ")
-                   currentDeviceData = RpmDeviceData(
-                       deviceName = connectedDeviceName ?: "Unknown",
-                       glucose = spo2.toDouble(),
-                       pulse = pulse)
-                   stopDeviceStatus(gatt, characteristic)
-               }
-           }
-        }
+        for (uuid in notificationUUIDs) {
+            val characteristic = gatt.services?.flatMap { it.characteristics }?.find { it.uuid.toString() == uuid }
+            if (characteristic != null && (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY != 0)) {
+                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
+                    val notifySuccess = gatt.setCharacteristicNotification(characteristic, true)
+                    Log.d(TAG, "enableSalyxNotificationsNew: Notification enabled for $uuid: $notifySuccess")
 
-        currentDeviceData?.let { listener.onDataReceived(connectedDeviceName ?: "Unknown", it) }
-    }
-
-    private fun parseBpMonitorData(data: ByteArray,gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
-        Log.d(TAG, "onCharacteristicChanged: 0: "+data[0].toInt() +" 1: "+data[1].toInt()+" " +
-                "2: " + " "+data[2].toInt()+" 5: "+data[5].toInt()+" 6: "+data[6].toInt())
-
-        if (data.isNotEmpty()) {
-            when(data[1].toInt() and 0xFF){
-                0x52 -> {
-                    Log.d(TAG, "parseBpMonitorData: Clear Memory Response")
-                    // Wait and send read command
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        requestReadCommand(gatt, characteristic)
-                    }, 700) // delay must be >= 600ms to be safe
+                    // Write CCCD descriptor to enable notifications (same as JS)
+                    val cccd = characteristic.getDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"))
+                    if (cccd != null) {
+                        cccd.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                        val descriptorSuccess = gatt.writeDescriptor(cccd)
+                        Log.d(TAG, "enableSalyxNotificationsNew: CCCD write for $uuid: $descriptorSuccess")
+                    } else {
+                        Log.w(TAG, "enableSalyxNotificationsNew: CCCD descriptor not found for $uuid")
+                    }
                 }
-                0x25 -> {
-                        Log.d(TAG, "parseGlucoseData: Data: ")
-                        val sys = data[2].toInt() and 0xFF       // Systolic
-                        val dia = data[4].toInt() and 0xFF       // Diastolic
-                        val pulse = data[5].toInt() and 0xFF     // Pulse
-
-                    Log.d("FORA_BP", "SYS: $sys mmHg, DIA: $dia mmHg, Pulse: $pulse bpm")
-                        currentDeviceData = RpmDeviceData(
-                            deviceName = connectedDeviceName ?: "Unknown",
-                            systolic = sys.toDouble(),
-                            diastolic = dia.toDouble(),
-                            pulse = pulse)
-                        stopDeviceStatus(gatt, characteristic)
-
-                }
-                0x26 -> {
-                    Log.d(TAG, "parseGlucoseData: Data: ")
-                    val sys = data[2].toInt() and 0xFF       // Systolic
-                    val dia = data[4].toInt() and 0xFF       // Diastolic
-                    val pulse = data[5].toInt() and 0xFF     // Pulse
-
-                    Log.d("FORA_BP", "SYS: $sys mmHg, DIA: $dia mmHg, Pulse: $pulse bpm")
-                    currentDeviceData = RpmDeviceData(
-                        deviceName = connectedDeviceName ?: "Unknown",
-                        systolic = sys.toDouble(),
-                        diastolic = dia.toDouble(),
-                        pulse = pulse)
-                    stopDeviceStatus(gatt, characteristic)
-                }
+            } else {
+                Log.w(TAG, "enableSalyxNotificationsNew: Characteristic not found or doesn't support notify: $uuid")
             }
         }
 
-        currentDeviceData?.let { listener.onDataReceived(connectedDeviceName ?: "Unknown", it) }
+        Log.d(TAG, "enableSalyxNotificationsNew: Notification setup complete")
     }
 
-    private fun parseForaSpo2Data(data: ByteArray, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
-        Log.d(TAG, "parseForaSpo2Data: 0: "+data[0].toInt()+" 1: "+data[1].toInt()+" " +
-                "2: " + " "+data[2].toInt()+" 5: "+data[5].toInt()+" 6: "+data[6].toInt()+" 3: " +
-                ""+data[3].toInt()+" 4: "+data[4].toInt())
+    private fun stopDeviceStatus(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
+        // For Salyx devices, use specification-compliant stop command
+        if (connectedDeviceName?.contains("SAL-", ignoreCase = true) == true) {
+            stopSalyxDeviceNew(gatt)
+            return
+        }
 
-        if (data.isNotEmpty()) {
-            when (data[1].toInt() and 0xFF) {
-                0x52 -> {
-                    Log.d(TAG, "parseForaSpo2Data: Clear Memory Response")
-                    // Wait and send read command
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        requestReadCommand(gatt, characteristic)
-                    }, 700) // delay must be >= 600ms to be safe
+        // Legacy stop command for other devices
+        val stopCommand = brandManager.buildStopCommand(connectedDeviceName ?: "")
+        @Suppress("DEPRECATION")
+        stopCommand?.let { characteristic.value = it }
+
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
+            val success = gatt.writeCharacteristic(characteristic)
+            Log.d("BLE", "Stop Device command write success: $success")
+        }
+
+        // Give device time to process stop command
+        Handler(Looper.getMainLooper()).postDelayed({
+            Log.d(TAG, "Stop command processing complete")
+            stop()
+        }, 500)
+    }
+
+    // NEW: Specification-compliant Salyx device stop
+    private fun stopSalyxDeviceNew(gatt: BluetoothGatt?) {
+        if (gatt == null || connectedDeviceName?.contains("SAL-", ignoreCase = true) != true) return
+
+        Log.d(TAG, "stopSalyxDeviceNew: Stopping Salyx device with spec-compliant command")
+
+        val salyxHandler = brandManager.getHandlerForDevice(connectedDeviceName ?: "") as? com.techrevhealth.docvoicepatient.ble.SalyxHandler
+        if (salyxHandler == null) return
+
+        // Get User Control characteristic for stop command
+        val userControlUUID = salyxHandler.getUserControlCharacteristicUUID()
+        val userControlChar = gatt.services?.flatMap { it.characteristics }?.find { it.uuid.toString() == userControlUUID }
+
+        if (userControlChar != null) {
+            // Send stop dataset command (c2)
+            // Wait for GATT to not be busy (matching JS implementation)
+            CoroutineScope(Dispatchers.IO).launch {
+                while (gattBusy) {
+                    delay(10)
                 }
-                0x27 -> {
-                    Log.d(TAG, "parseForaSpo2Data: SerialNumber: ")
-                    val serial = String.format(
-                        "%02X%02X%02X%02X",
-                        data[0],
-                        data[1],
-                        data[2],
-                        data[3]
-                    )
-                    currentDeviceData = RpmDeviceData(
-                        deviceName = connectedDeviceName ?: "Unknown",
-                        serialNumber = serial)
-                    Log.d("FORA_SPO2", "serial: $serial ")
-                    // Wait and send read command
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        requestReadCommand(gatt, characteristic)
-                    }, 2000) // delay must be >= 600ms to be safe
-                }
-                0x49 -> {
-                    Log.d(TAG, "parseForaSpo2Data: Data: ")
-                    val spo2 = data[2].toInt() and 0xFF
-                    val pulse = data[5].toInt() and 0xFF
-                    Log.d("FORA_SPO2", "SpO2: $spo2%, Heart Rate: $pulse bpm")
-                    currentDeviceData = RpmDeviceData(
-                        deviceName = connectedDeviceName ?: "Unknown",
-                        spo2 = spo2,
-                        pulse = pulse)
-                    stopDeviceStatus(gatt, characteristic) // Only if you're done
-                }
-                0x4F -> {
-                    Log.d(TAG, "parseForaSpo2Data: battery")
-                    val battery = data[2].toInt() and 0xFF
-                    val firmware = data[4].toInt() and 0xFF
-                    currentDeviceData = RpmDeviceData(
-                        deviceName = connectedDeviceName ?: "Unknown",
-                        battery = battery,
-                        firmware = firmware.toString())
-                    Log.d("FORA_SPO2", "Battery: $battery%, Firmware: $firmware")
+                gattBusy = true
+
+                val stopCommand = salyxHandler.buildStopDatasetCommand()
+                @Suppress("DEPRECATION")
+                userControlChar.setValue(stopCommand)
+
+                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
+                    val writeSuccess = gatt.writeCharacteristic(userControlChar)
+                    Log.d(TAG, "stopSalyxDeviceNew: Stop dataset command write success: $writeSuccess")
                 }
 
-
+                gattBusy = false
             }
         }
 
-
-        currentDeviceData?.let { listener.onDataReceived(connectedDeviceName ?: "Unknown", it) }
+        // Give device time to process stop command
+        Handler(Looper.getMainLooper()).postDelayed({
+            Log.d(TAG, "stopSalyxDeviceNew: Stop command processing complete")
+            stop()
+        }, 500)
     }
+
+
 
     private fun requestSerialStatus(gatt: BluetoothGatt, characteristic:
     BluetoothGattCharacteristic) {
         val batteryCommand = buildSerialCommand()
+        @Suppress("DEPRECATION")
         characteristic.value = batteryCommand
         if (ActivityCompat.checkSelfPermission(
                 context,
@@ -873,10 +737,31 @@ class BleRpmManager(
         Log.d("BLE", "Serial Number command write success: $success")
     }
 
+    private fun buildSerialCommand(): ByteArray {
+        val command = byteArrayOf(
+            0x51.toByte(),
+            0x27.toByte(), // Read device status
+            0x00, 0x00, 0x00, 0x00,
+            0xA3.toByte(),
+            0x00
+        )
+        command[7] = calculateChecksum(command)
+        return command
+    }
+
+    private fun calculateChecksum(data: ByteArray): Byte {
+        var sum = 0
+        for (i in 0 until 7) {
+            sum += data[i].toInt() and 0xFF
+        }
+        return (sum and 0xFF).toByte()
+    }
+
     private fun requestReadCommand(gatt: BluetoothGatt, characteristic:
     BluetoothGattCharacteristic) {
-        val chooseReadCommand = chooseReadCommand()
-        characteristic.setValue(chooseReadCommand)
+        val readCommand = brandManager.buildReadCommand(connectedDeviceName ?: "")
+        @Suppress("DEPRECATION")
+        readCommand?.let { characteristic.setValue(it) }
         if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.BLUETOOTH_CONNECT
@@ -895,32 +780,7 @@ class BleRpmManager(
         Log.d("BLE", "Read command write success: $success")
     }
 
-    private fun chooseReadCommand(): ByteArray {
-        if (connectedDeviceName.equals(RpmDeviceType.TNG_SPO2.displayName, true)) {
-            return buildReadCommand()
-        }else if (connectedDeviceName.equals(RpmDeviceType.FORA_PREMIUM_V10.displayName,true)){
-            return buildReadGlucoseResultCommand()
-        }else if (connectedDeviceName.equals(RpmDeviceType.FORA_P20.displayName,true)){
-            return buildReadBpResultCommand()
-        }else if (connectedDeviceName.equals(RpmDeviceType.TNG_SCALE.displayName,true)){
-            Log.d(TAG, "chooseReadCommand: ")
-            return buildReadWeightMachineCommand()
-        }
-        return buildReadWeightMachineCommand()
-    }
 
-    private fun chooseStopCommand():ByteArray{
-        if (connectedDeviceName.equals(RpmDeviceType.TNG_SPO2.displayName, true)) {
-            return stopDeviceCommand()
-        }else if (connectedDeviceName.equals(RpmDeviceType.FORA_PREMIUM_V10.displayName,true)){
-            return buildGlucoseStopDeviceCommand()
-        }else if (connectedDeviceName.equals(RpmDeviceType.FORA_P20.displayName,true)){
-            return buildStopBpCommand()
-        }else if (connectedDeviceName.equals(RpmDeviceType.TNG_SCALE.displayName,true)){
-            return buildStopWeightMachineCommand()
-        }
-        return stopDeviceCommand()
-    }
 
     fun start() {
         startScan()
