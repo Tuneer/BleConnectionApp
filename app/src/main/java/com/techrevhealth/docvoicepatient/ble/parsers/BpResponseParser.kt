@@ -174,12 +174,19 @@ class BpResponseParser(
         Log.d(TAG, "Raw bytes: $hexString")
         
         try {
-            // Per old implementation: Systolic at data[2], Diastolic at data[4], Pulse at data[5]
+            // Per BP PDF Table E & F (page 8):
+            // Byte 0: 0x51 (Start), Byte 1: 0x26 (CMD)
+            // Byte 2: Data_0 = Systolic (8-bit mmHg)
+            // Byte 3: Data_1 = MAP (Mean Arterial Pressure)
+            // Byte 4: Data_2 = Diastolic (8-bit mmHg)
+            // Byte 5: Data_3 = Pulse (8-bit pul/min)
             val systolic = data[2].toInt() and 0xFF
+            val map = data[3].toInt() and 0xFF  // Mean Arterial Pressure
             val diastolic = data[4].toInt() and 0xFF
             val pulse = data[5].toInt() and 0xFF
             
             Log.d(TAG, "Systolic: $systolic mmHg")
+            Log.d(TAG, "MAP: $map mmHg")
             Log.d(TAG, "Diastolic: $diastolic mmHg")
             Log.d(TAG, "Pulse: $pulse bpm")
             
@@ -195,6 +202,7 @@ class BpResponseParser(
             Log.d(TAG, "Model: ${accumulatedData?.deviceModel}")
             Log.d(TAG, "Serial: ${accumulatedData?.serialNumber}")
             Log.d(TAG, "Systolic: ${accumulatedData?.systolic} mmHg")
+            Log.d(TAG, "MAP: $map mmHg")
             Log.d(TAG, "Diastolic: ${accumulatedData?.diastolic} mmHg")
             Log.d(TAG, "Pulse: ${accumulatedData?.pulse} bpm")
             Log.d(TAG, "=====================")
