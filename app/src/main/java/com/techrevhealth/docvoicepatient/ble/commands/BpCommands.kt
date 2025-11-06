@@ -3,6 +3,8 @@ package com.techrevhealth.docvoicepatient.ble.commands
 /**
  * Blood Pressure Monitor Commands (FORA P20)
  * Based on FORA P-series BP Monitor specification
+ * 
+ * Command sequence: 0x52 → 0x23 → 0x24 → 0x27 → 0x28 → 0x25 → 0x26
  */
 object BpCommands {
     
@@ -22,8 +24,73 @@ object BpCommands {
     }
     
     /**
+     * 0x23 - Read clock time
+     * Returns: Current device date/time
+     */
+    fun readClockTime(): ByteArray {
+        val command = byteArrayOf(
+            0x51.toByte(),
+            0x23.toByte(), // CMD: Read clock
+            0x00, 0x00, 0x00, 0x00,
+            0xA3.toByte(),
+            0x00
+        )
+        command[7] = calculateChecksum(command)
+        return command
+    }
+    
+    /**
+     * 0x24 - Read device model
+     * Returns: Model code (2-byte Word)
+     */
+    fun readDeviceModel(): ByteArray {
+        val command = byteArrayOf(
+            0x51.toByte(),
+            0x24.toByte(), // CMD: Read model
+            0x00, 0x00, 0x00, 0x00,
+            0xA3.toByte(),
+            0x00
+        )
+        command[7] = calculateChecksum(command)
+        return command
+    }
+    
+    /**
+     * 0x27 - Read serial number part 1 (SN_0~SN_3)
+     * Returns: Second half of serial number
+     */
+    fun readSerialPart1(): ByteArray {
+        val command = byteArrayOf(
+            0x51.toByte(),
+            0x27.toByte(), // CMD: Serial part 1
+            0x00, 0x00, 0x00, 0x00,
+            0xA3.toByte(),
+            0x00
+        )
+        command[7] = calculateChecksum(command)
+        return command
+    }
+    
+    /**
+     * 0x28 - Read serial number part 2 (SN_4~SN_7)
+     * Returns: First half of serial number
+     * Complete serial = 0x28 result + 0x27 result
+     */
+    fun readSerialPart2(): ByteArray {
+        val command = byteArrayOf(
+            0x51.toByte(),
+            0x28.toByte(), // CMD: Serial part 2
+            0x00, 0x00, 0x00, 0x00,
+            0xA3.toByte(),
+            0x00
+        )
+        command[7] = calculateChecksum(command)
+        return command
+    }
+    
+    /**
      * 0x25 - Read BP measurement data (time)
-     * Returns: Measurement date and time
+     * Returns: Stored measurement date and time when BP reading was taken
      */
     fun readMeasurementTime(index: Int = 0): ByteArray {
         val command = byteArrayOf(
@@ -41,7 +108,7 @@ object BpCommands {
     
     /**
      * 0x26 - Read BP measurement data (result)
-     * Returns: Systolic, Diastolic, Pulse
+     * Returns: Systolic (data[2]), Diastolic (data[4]), Pulse (data[5])
      */
     fun readBpValue(index: Int = 0): ByteArray {
         val command = byteArrayOf(

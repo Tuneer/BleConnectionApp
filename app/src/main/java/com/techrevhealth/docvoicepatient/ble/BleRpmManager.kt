@@ -197,7 +197,8 @@ class BleRpmManager(
                     onDataComplete = { data ->
                         currentDeviceData = data
                         listener.onDataReceived(deviceName, data)
-                    }
+                    },
+                    writeCharacteristic = ::writeCharacteristic
                 )
             }
             deviceName.contains("TNG SCALE", ignoreCase = true) -> {
@@ -445,7 +446,7 @@ class BleRpmManager(
                         GlucoseCommands.clearMemory()
                     }
                     connectedDeviceName?.contains("FORA P20", ignoreCase = true) == true -> {
-                        BpCommands.readBpValue()
+                        BpCommands.clearMemory()
                     }
                     connectedDeviceName?.contains("TNG SCALE", ignoreCase = true) == true -> {
                         WeightCommands.readWeightData()
