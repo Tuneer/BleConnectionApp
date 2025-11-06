@@ -853,6 +853,7 @@ class BleRpmManager(
             when (data[1].toInt() and 0xFF) {
                 0x23 -> {
                     Log.d(TAG, "parseForaSpo2Data: Clock Time")
+                    Log.d("FORA_SPO2", "Raw bytes: [0]=${data[0]} [1]=${data[1]} [2]=${data[2]} [3]=${data[3]}")
                     try {
                         // Parse date/time per PDF Table A and B
                         val data0 = data[0].toInt() and 0xFF
@@ -869,10 +870,13 @@ class BleRpmManager(
                         Log.d("FORA_SPO2", "Measurement Time: $timestamp")
                         
                         // Initialize accumulated data with timestamp
-                        accumulatedDeviceData = RpmDeviceData(deviceName = connectedDeviceName ?: "Unknown")
-                        // Store timestamp - you may want to add this field to RpmDeviceData
+                        accumulatedDeviceData = RpmDeviceData(
+                            deviceName = connectedDeviceName ?: "Unknown",
+                            measureTime = timestamp
+                        )
                     } catch (e: Exception) {
                         Log.w("FORA_SPO2", "Failed to parse clock time: ${e.message}")
+                        accumulatedDeviceData = RpmDeviceData(deviceName = connectedDeviceName ?: "Unknown")
                     }
                     // Send device model command next
                     Handler(Looper.getMainLooper()).postDelayed({
@@ -880,7 +884,12 @@ class BleRpmManager(
                     }, 700) // delay must be >= 600ms to be safe
                 }
                 0x24 -> {
-                    Log.d(TAG, "parseForaSpo2Data: Device Model")
+                    Log.d(TAG, "parseForaSpo2Data: Device Model Response")
+                    Log.d("FORA_SPO2", "Raw bytes: [0]=${data[0]} [1]=${data[1]} [2]=${data[2]} [3]=${data[3]}")
+                    // Check if this is actually the ACK for 0x24
+                    val cmdByte = data[1].toInt() and 0xFF
+                    Log.d("FORA_SPO2", "Command byte: 0x${cmdByte.toString(16).uppercase()}")
+                    
                     // Model is in Data_1 + Data_0 (word, Data_1 is MSB)
                     val modelCode = ((data[1].toInt() and 0xFF) shl 8) or (data[0].toInt() and 0xFF)
                     val modelString = modelCode.toString()
@@ -891,7 +900,8 @@ class BleRpmManager(
                         deviceName = connectedDeviceName ?: "Unknown",
                         deviceModel = modelString
                     )
-                    Log.d("FORA_SPO2", "Device Model Code: $modelCode")
+                    Log.d("FORA_SPO2", "Device Model Code: $modelCode (decimal) / 0x${modelCode.toString(16).uppercase()} (hex)")
+                    Log.d("FORA_SPO2", "Accumulated data so far: $accumulatedDeviceData")
                     // Per PDF: 0x27 is "part 1" - call FIRST to get SN_0~SN_3 (second half)
                     Handler(Looper.getMainLooper()).postDelayed({
                         requestSerialStatus(gatt, characteristic)
@@ -950,6 +960,7 @@ class BleRpmManager(
                 0x4F -> {
                     // EXPERIMENTAL: 0x4F is NOT documented in official PDF
                     Log.d(TAG, "parseForaSpo2Data: Battery (UNDOCUMENTED 0x4F)")
+                    Log.d("FORA_SPO2", "Raw bytes: [0]=${data[0]} [1]=${data[1]} [2]=${data[2]} [3]=${data[3]} [4]=${data[4]}")
                     try {
                         val battery = data[2].toInt() and 0xFF
                         val firmware = data[4].toInt() and 0xFF
@@ -959,6 +970,7 @@ class BleRpmManager(
                             firmware = firmware.toString()
                         ) ?: accumulatedDeviceData
                         Log.d("FORA_SPO2", "Battery: $battery%, Firmware: $firmware (EXPERIMENTAL)")
+                        Log.d("FORA_SPO2", "Accumulated data after battery: $accumulatedDeviceData")
                     } catch (e: Exception) {
                         Log.w("FORA_SPO2", "0x4F battery command failed (expected - undocumented): ${e.message}")
                     }
@@ -993,6 +1005,16 @@ class BleRpmManager(
                     )
                     // Set current device data to accumulated data
                     currentDeviceData = accumulatedDeviceData
+                    Log.d("FORA_SPO2", "=== FINAL ACCUMULATED DATA ===")
+                    Log.d("FORA_SPO2", "Device: ${currentDeviceData?.deviceName}")
+                    Log.d("FORA_SPO2", "Measure Time: ${currentDeviceData?.measureTime}")
+                    Log.d("FORA_SPO2", "Model: ${currentDeviceData?.deviceModel}")
+                    Log.d("FORA_SPO2", "Serial: ${currentDeviceData?.serialNumber}")
+                    Log.d("FORA_SPO2", "Battery: ${currentDeviceData?.battery}%")
+                    Log.d("FORA_SPO2", "Firmware: ${currentDeviceData?.firmware}")
+                    Log.d("FORA_SPO2", "SpO2: ${currentDeviceData?.spo2}%")
+                    Log.d("FORA_SPO2", "Pulse: ${currentDeviceData?.pulse} bpm")
+                    Log.d("FORA_SPO2", "=============================")
                     // Now we have all the data, stop the device
                     stopDeviceStatus(gatt, characteristic)
                 }
