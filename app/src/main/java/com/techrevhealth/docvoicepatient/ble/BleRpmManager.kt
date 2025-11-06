@@ -281,6 +281,19 @@ class BleRpmManager(
         return command
     }
 
+    // Read device clock time (measurement timestamp)
+    private fun buildClockTimeCommand(): ByteArray {
+        val command = byteArrayOf(
+            0x51.toByte(),
+            0x23.toByte(), // Read device clock time
+            0x00, 0x00, 0x00, 0x00,
+            0xA3.toByte(),
+            0x00
+        )
+        command[7] = calculateChecksum(command)
+        return command
+    }
+
     // EXPERIMENTAL: Battery command (NOT in official PDF)
     // This command 0x4F is not documented in FORA SPO2 V1.05 specification
     // but may be supported by actual hardware. Use with caution.
@@ -930,6 +943,33 @@ class BleRpmManager(
                     } catch (e: Exception) {
                         Log.w("FORA_SPO2", "0x4F battery command failed (expected - undocumented): ${e.message}")
                     }
+                    // Send 0x23 command to get measurement date/time
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        requestClockTime(gatt, characteristic)
+                    }, 700) // delay must be >= 600ms to be safe
+                }
+                0x23 -> {
+                    Log.d(TAG, "parseForaSpo2Data: Clock Time")
+                    try {
+                        // Parse date/time per PDF Table A and B
+                        val data0 = data[0].toInt() and 0xFF
+                        val data1 = data[1].toInt() and 0xFF
+                        val minute = data[2].toInt() and 0x3F  // 6-bit
+                        val hour = data[3].toInt() and 0x1F    // 5-bit
+                        
+                        // Table A: Day+Month+Year encoding
+                        val day = data0 and 0x1F  // bits 0-4
+                        val month = ((data0 shr 5) and 0x07) or ((data1 and 0x01) shl 3)  // bits 5-7 of data0 + bit 0 of data1
+                        val year = ((data1 shr 1) and 0x7F) + 2000  // bits 1-7 of data1, add 2000
+                        
+                        val timestamp = String.format("%04d-%02d-%02d %02d:%02d", year, month, day, hour, minute)
+                        Log.d("FORA_SPO2", "Measurement Time: $timestamp")
+                        
+                        // Store timestamp - you may want to add this field to RpmDeviceData
+                        // For now, logging it
+                    } catch (e: Exception) {
+                        Log.w("FORA_SPO2", "Failed to parse clock time: ${e.message}")
+                    }
                     // Send 0x49 command directly to get SpO2/Pulse data
                     val readCommand = buildReadCommand()
                     characteristic.value = readCommand
@@ -1032,6 +1072,21 @@ class BleRpmManager(
         }
         val success = gatt.writeCharacteristic(characteristic)
         Log.d("BLE", "Battery command (EXPERIMENTAL) write success: $success")
+    }
+
+    private fun requestClockTime(gatt: BluetoothGatt, characteristic:
+    BluetoothGattCharacteristic) {
+        val clockCommand = buildClockTimeCommand()
+        characteristic.value = clockCommand
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.BLUETOOTH_CONNECT
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+        val success = gatt.writeCharacteristic(characteristic)
+        Log.d("BLE", "Clock Time command write success: $success")
     }
 
     private fun requestReadCommand(gatt: BluetoothGatt, characteristic:
