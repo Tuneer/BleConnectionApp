@@ -59,6 +59,8 @@ class BleRpmManager(
 
     private var currentDeviceData: RpmDeviceData? = null
     private var accumulatedDeviceData: RpmDeviceData? = null
+    private var spo2ReadRetryCount = 0
+    private val MAX_SPO2_RETRY = 5  // Retry up to 5 times waiting for valid reading
 
     fun getCurrentDeviceData(): RpmDeviceData? = currentDeviceData
 
@@ -851,6 +853,18 @@ class BleRpmManager(
 
         if (data.isNotEmpty()) {
             when (data[1].toInt() and 0xFF) {
+                0x52 -> {
+                    Log.d(TAG, "parseForaSpo2Data: Clear Memory Response (0x52)")
+                    Log.d("FORA_SPO2", "Memory cleared - ready for fresh reading")
+                    // Reset retry counter
+                    spo2ReadRetryCount = 0
+                    // Initialize accumulated data
+                    accumulatedDeviceData = RpmDeviceData(deviceName = connectedDeviceName ?: "Unknown")
+                    // Start with clock time
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        requestClockTime(gatt, characteristic)
+                    }, 700) // delay must be >= 600ms to be safe
+                }
                 0x23 -> {
                     Log.d(TAG, "parseForaSpo2Data: Clock Time")
                     Log.d("FORA_SPO2", "Raw bytes: [0]=${data[0]} [1]=${data[1]} [2]=${data[2]} [3]=${data[3]}")
@@ -1036,6 +1050,33 @@ class BleRpmManager(
                     
                     Log.d("FORA_SPO2", "FINAL VALUES - SpO2: $spo2%, Heart Rate: $pulse bpm")
                     
+                    // Check if values are still 0 (no measurement taken yet)
+                    if ((spo2 == 0 || pulse == 0) && spo2ReadRetryCount < MAX_SPO2_RETRY) {
+                        spo2ReadRetryCount++
+                        Log.w("FORA_SPO2", "⚠️ No valid reading yet (SpO2=$spo2, Pulse=$pulse)")
+                        Log.w("FORA_SPO2", "⏳ Waiting for user to take measurement... Retry $spo2ReadRetryCount/$MAX_SPO2_RETRY")
+                        Log.w("FORA_SPO2", "Please place finger on SPO2 device now!")
+                        
+                        // Wait longer and retry
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            Log.d("FORA_SPO2", "Retrying 0x49 command...")
+                            val readCommand = buildReadCommand()
+                            characteristic.value = readCommand
+                            if (ActivityCompat.checkSelfPermission(
+                                    context,
+                                    Manifest.permission.BLUETOOTH_CONNECT
+                                ) != PackageManager.PERMISSION_GRANTED
+                            ) {
+                                return@postDelayed
+                            }
+                            gatt.writeCharacteristic(characteristic)
+                        }, 2000) // Wait 2 seconds before retry
+                        return  // Don't process further
+                    }
+                    
+                    // Reset retry counter on success
+                    spo2ReadRetryCount = 0
+                    
                     // Accumulate SpO2 and pulse data
                     accumulatedDeviceData = accumulatedDeviceData?.copy(
                         spo2 = spo2,
@@ -1169,7 +1210,7 @@ class BleRpmManager(
 
     private fun chooseReadCommand(): ByteArray {
         if (connectedDeviceName.equals(RpmDeviceType.TNG_SPO2.displayName, true)) {
-            return buildClockTimeCommand()  // Start with clock time instead of clear memory
+            return clearMemoryCommand()  // Clear old data first, then start flow
         }else if (connectedDeviceName.equals(RpmDeviceType.FORA_PREMIUM_V10.displayName,true)){
             return buildReadGlucoseResultCommand()
         }else if (connectedDeviceName.equals(RpmDeviceType.FORA_P20.displayName,true)){
