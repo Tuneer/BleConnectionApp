@@ -758,44 +758,117 @@ class BleRpmManager(
         if (data.isNotEmpty()) {
            when (data[1].toInt() and 0xFF) {
                0x52 -> {
-                   Log.d(TAG, "parseGlucoseData: Clear Memory Response")
-                   // Wait and send read command
+                   Log.d(TAG, "parseGlucoseData: Clear Memory Response (0x52)")
+                   Log.d("FORA_GLUCOSE", "Memory cleared - ready for fresh reading")
+                   // Initialize accumulated data
+                   accumulatedDeviceData = RpmDeviceData(deviceName = connectedDeviceName ?: "Unknown")
+                   // Start with clock time
                    Handler(Looper.getMainLooper()).postDelayed({
-                       requestReadCommand(gatt, characteristic)
-                   }, 700) // delay must be >= 600ms to be safe
+                       requestClockTime(gatt, characteristic)
+                   }, 700)
                }
                0x23 -> {
-                   Log.d(TAG, "parseGlucoseData: TimeStamp: ")
-                   val year = (data[1].toInt() shr 1) + 2000
-                   val month = ((data[1].toInt() and 0x01) shl 3) or (data[0].toInt() shr 5)
-                   val day = data[0].toInt() and 0x1F
-                   val minute = data[2].toInt() and 0x3F
-                   val hour = data[3].toInt() and 0x1F
-
-                   Log.d(TAG, "parseGlucoseData: Date: $day/$month/$year")
-                   Log.d(TAG, "parseGlucoseData: Time: $hour:$minute")
-
-                   // Wait and send read command
+                   Log.d(TAG, "parseGlucoseData: Clock Time (0x23)")
+                   Log.d("FORA_GLUCOSE", "Raw bytes: [0]=${data[0]} [1]=${data[1]} [2]=${data[2]} [3]=${data[3]}")
+                   try {
+                       // Parse date/time - same format as SPO2
+                       val data0 = data[0].toInt() and 0xFF
+                       val data1 = data[1].toInt() and 0xFF
+                       val minute = data[2].toInt() and 0x3F
+                       val hour = data[3].toInt() and 0x1F
+                       
+                       val day = data0 and 0x1F
+                       val month = ((data0 shr 5) and 0x07) or ((data1 and 0x01) shl 3)
+                       val year = ((data1 shr 1) and 0x7F) + 2000
+                       
+                       val timestamp = String.format("%04d-%02d-%02d %02d:%02d", year, month, day, hour, minute)
+                       Log.d("FORA_GLUCOSE", "Measurement Time: $timestamp")
+                       
+                       accumulatedDeviceData = RpmDeviceData(
+                           deviceName = connectedDeviceName ?: "Unknown",
+                           measureTime = timestamp
+                       )
+                   } catch (e: Exception) {
+                       Log.w("FORA_GLUCOSE", "Failed to parse clock time: ${e.message}")
+                       accumulatedDeviceData = RpmDeviceData(deviceName = connectedDeviceName ?: "Unknown")
+                   }
+                   // Send device model command
+                   Handler(Looper.getMainLooper()).postDelayed({
+                       requestDeviceModel(gatt, characteristic)
+                   }, 700)
+               }
+               0x24 -> {
+                   Log.d(TAG, "parseGlucoseData: Device Model (0x24)")
+                   Log.d("FORA_GLUCOSE", "Raw bytes: [0]=${data[0]} [1]=${data[1]}")
+                   val modelCode = ((data[1].toInt() and 0xFF) shl 8) or (data[0].toInt() and 0xFF)
+                   accumulatedDeviceData = accumulatedDeviceData?.copy(
+                       deviceModel = modelCode.toString()
+                   ) ?: RpmDeviceData(
+                       deviceName = connectedDeviceName ?: "Unknown",
+                       deviceModel = modelCode.toString()
+                   )
+                   Log.d("FORA_GLUCOSE", "Device Model: $modelCode")
+                   // Send serial part 1
+                   Handler(Looper.getMainLooper()).postDelayed({
+                       requestSerialStatus(gatt, characteristic)
+                   }, 700)
+               }
+               0x27 -> {
+                   Log.d(TAG, "parseGlucoseData: Serial Part 1 (SN_0~3)")
+                   val serial1 = String.format("%02X%02X%02X%02X", data[0], data[1], data[2], data[3])
+                   accumulatedDeviceData = accumulatedDeviceData?.copy(
+                       firmware = serial1  // Temp storage
+                   ) ?: RpmDeviceData(deviceName = connectedDeviceName ?: "Unknown", firmware = serial1)
+                   Log.d("FORA_GLUCOSE", "Serial Part 1: $serial1")
+                   // Send serial part 2
+                   Handler(Looper.getMainLooper()).postDelayed({
+                       requestSerialStatus2(gatt, characteristic)
+                   }, 700)
+               }
+               0x28 -> {
+                   Log.d(TAG, "parseGlucoseData: Serial Part 2 (SN_4~7)")
+                   val serial2 = String.format("%02X%02X%02X%02X", data[0], data[1], data[2], data[3])
+                   val serial1 = accumulatedDeviceData?.firmware ?: ""
+                   val completeSerial = serial2 + serial1
+                   accumulatedDeviceData = accumulatedDeviceData?.copy(
+                       serialNumber = completeSerial,
+                       firmware = null
+                   ) ?: RpmDeviceData(deviceName = connectedDeviceName ?: "Unknown", serialNumber = completeSerial)
+                   Log.d("FORA_GLUCOSE", "Complete Serial: $completeSerial")
+                   // Send glucose read command
                    Handler(Looper.getMainLooper()).postDelayed({
                        requestReadCommand(gatt, characteristic)
-                   }, 700) // delay must be >= 600ms to be safe
-
+                   }, 700)
                }
                0x26 -> {
-                   Log.d(TAG, "parseGlucoseData: Data: ")
-                   val spo2 = data[2].toInt() and 0xFF
-                   val pulse = data[5].toInt() and 0xFF
-                   Log.d("FORA PREMIUM V10", "Glucose: $spo2 mg/dl, Values 5: $pulse ")
-                   currentDeviceData = RpmDeviceData(
+                   Log.d(TAG, "parseGlucoseData: Glucose Value (0x26)")
+                   val hexString = data.joinToString(" ") { String.format("%02X", it) }
+                   Log.d("FORA_GLUCOSE", "Raw bytes: $hexString")
+                   
+                   val glucose = data[2].toInt() and 0xFF
+                   Log.d("FORA_GLUCOSE", "Glucose: $glucose mg/dL")
+                   
+                   // Accumulate glucose value
+                   accumulatedDeviceData = accumulatedDeviceData?.copy(
+                       glucose = glucose.toDouble()
+                   ) ?: RpmDeviceData(
                        deviceName = connectedDeviceName ?: "Unknown",
-                       glucose = spo2.toDouble(),
-                       pulse = pulse)
-                   stopDeviceStatus(gatt, characteristic)
+                       glucose = glucose.toDouble()
+                   )
+                   
+                   currentDeviceData = accumulatedDeviceData
+                   Log.d("FORA_GLUCOSE", "=== FINAL DATA ===")
+                   Log.d("FORA_GLUCOSE", "Measure Time: ${currentDeviceData?.measureTime}")
+                   Log.d("FORA_GLUCOSE", "Model: ${currentDeviceData?.deviceModel}")
+                   Log.d("FORA_GLUCOSE", "Serial: ${currentDeviceData?.serialNumber}")
+                   Log.d("FORA_GLUCOSE", "Glucose: ${currentDeviceData?.glucose} mg/dL")
+                   Log.d("FORA_GLUCOSE", "==================")
+                   
+                   //stopDeviceStatus(gatt, characteristic)
+                   currentDeviceData?.let { listener.onDataReceived(connectedDeviceName ?: "Unknown", it) }
                }
            }
         }
-
-        currentDeviceData?.let { listener.onDataReceived(connectedDeviceName ?: "Unknown", it) }
     }
 
     private fun parseBpMonitorData(data: ByteArray,gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
@@ -1099,7 +1172,9 @@ class BleRpmManager(
                     Log.d("FORA_SPO2", "Pulse: ${currentDeviceData?.pulse} bpm")
                     Log.d("FORA_SPO2", "=============================")
                     // Now we have all the data, stop the device
-                    stopDeviceStatus(gatt, characteristic)
+                    //stopDeviceStatus(gatt, characteristic)
+
+                    currentDeviceData?.let { listener.onDataReceived(connectedDeviceName ?: "Unknown", it) }
                 }
 
 
@@ -1107,7 +1182,7 @@ class BleRpmManager(
         }
 
 
-        currentDeviceData?.let { listener.onDataReceived(connectedDeviceName ?: "Unknown", it) }
+        
     }
 
     private fun requestSerialStatus(gatt: BluetoothGatt, characteristic:

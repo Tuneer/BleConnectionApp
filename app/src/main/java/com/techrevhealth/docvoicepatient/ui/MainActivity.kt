@@ -105,6 +105,8 @@ class MainActivity : AppCompatActivity(), SearchingDialogFragment.BleDialogListe
                     val builder = StringBuilder()
                     builder.append("Device: ${data.deviceName}\n")
                     data.serialNumber?.let { builder.append("Serial No: $it\n") }
+                    data.measureTime?.let { builder.append("Measure Time: $it\n") }
+                    data.deviceModel?.let { builder.append("Model: $it\n") }
                     data.spo2?.let { builder.append("SpO2: $it%\n") }
                     data.pulse?.let { builder.append("Pulse: $it bpm\n") }
                     data.battery?.let { builder.append("Battery: $it%\n") }
