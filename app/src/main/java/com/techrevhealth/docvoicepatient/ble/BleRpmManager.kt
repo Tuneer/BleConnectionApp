@@ -845,7 +845,9 @@ class BleRpmManager(
                    val hexString = data.joinToString(" ") { String.format("%02X", it) }
                    Log.d("FORA_GLUCOSE", "Raw bytes: $hexString")
                    
-                   val glucose = data[2].toInt() and 0xFF
+                   // Per PDF: Value is 2 bytes (Word) - Data_1 + Data_0
+                   // Unit: mg/dL (mg/dL = mmol/L * 18)
+                   val glucose = ((data[1].toInt() and 0xFF) shl 8) or (data[0].toInt() and 0xFF)
                    Log.d("FORA_GLUCOSE", "Glucose: $glucose mg/dL")
                    
                    // Accumulate glucose value
