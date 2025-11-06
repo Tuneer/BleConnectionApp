@@ -21,6 +21,8 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import androidx.core.app.ActivityCompat
+import com.techrevhealth.docvoicepatient.ble.commands.*
+import com.techrevhealth.docvoicepatient.ble.parsers.*
 import com.techrevhealth.docvoicepatient.dataclass.RpmDeviceData
 import com.techrevhealth.docvoicepatient.helpers.RpmDeviceType
 import kotlinx.coroutines.CoroutineScope
@@ -58,9 +60,12 @@ class BleRpmManager(
     private val handler = Handler(Looper.getMainLooper())
 
     private var currentDeviceData: RpmDeviceData? = null
-    private var accumulatedDeviceData: RpmDeviceData? = null
-    private var spo2ReadRetryCount = 0
-    private val MAX_SPO2_RETRY = 5  // Retry up to 5 times waiting for valid reading
+    
+    // Device-specific parsers
+    private var spo2Parser: Spo2ResponseParser? = null
+    private var glucoseParser: GlucoseResponseParser? = null
+    private var bpParser: BpResponseParser? = null
+    private var weightParser: WeightResponseParser? = null
 
     fun getCurrentDeviceData(): RpmDeviceData? = currentDeviceData
 
