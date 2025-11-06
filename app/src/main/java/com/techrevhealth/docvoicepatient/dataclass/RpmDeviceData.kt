@@ -11,5 +11,6 @@ data class RpmDeviceData(
     val glucose: Double? = null,
     val battery: Int? = null,
     val firmware: String? = null,
-    val serialNumber: String? = null
+    val serialNumber: String? = null,
+    val deviceModel: String? = null
 )

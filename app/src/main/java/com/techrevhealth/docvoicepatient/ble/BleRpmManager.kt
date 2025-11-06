@@ -268,6 +268,19 @@ class BleRpmManager(
         return command
     }
 
+    // Read device model
+    private fun buildDeviceModelCommand(): ByteArray {
+        val command = byteArrayOf(
+            0x51.toByte(),
+            0x24.toByte(), // Read device model/project code
+            0x00, 0x00, 0x00, 0x00,
+            0xA3.toByte(),
+            0x00
+        )
+        command[7] = calculateChecksum(command)
+        return command
+    }
+
     // Battery + System Info
     private fun buildBatteryCommand(): ByteArray {
         val command = byteArrayOf(
@@ -827,7 +840,25 @@ class BleRpmManager(
                     Log.d(TAG, "parseForaSpo2Data: Clear Memory Response")
                     // Initialize accumulated data for this device session
                     accumulatedDeviceData = RpmDeviceData(deviceName = connectedDeviceName ?: "Unknown")
-                    // Wait and send serial number part 2 command first (gets first half SN_4~SN_7)
+                    // Wait and send device model command first
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        requestDeviceModel(gatt, characteristic)
+                    }, 700) // delay must be >= 600ms to be safe
+                }
+                0x24 -> {
+                    Log.d(TAG, "parseForaSpo2Data: Device Model")
+                    // Model is in Data_1 + Data_0 (word, Data_1 is MSB)
+                    val modelCode = ((data[1].toInt() and 0xFF) shl 8) or (data[0].toInt() and 0xFF)
+                    val modelString = modelCode.toString()
+                    // Store model
+                    accumulatedDeviceData = accumulatedDeviceData?.copy(
+                        deviceModel = modelString
+                    ) ?: RpmDeviceData(
+                        deviceName = connectedDeviceName ?: "Unknown",
+                        deviceModel = modelString
+                    )
+                    Log.d("FORA_SPO2", "Device Model Code: $modelCode")
+                    // Wait and send serial number part 2 command
                     Handler(Looper.getMainLooper()).postDelayed({
                         requestSerialStatus2(gatt, characteristic)
                     }, 700) // delay must be >= 600ms to be safe
@@ -955,6 +986,21 @@ class BleRpmManager(
         }
         val success = gatt.writeCharacteristic(characteristic)
         Log.d("BLE", "Serial Number Part 2 command write success: $success")
+    }
+
+    private fun requestDeviceModel(gatt: BluetoothGatt, characteristic:
+    BluetoothGattCharacteristic) {
+        val modelCommand = buildDeviceModelCommand()
+        characteristic.value = modelCommand
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.BLUETOOTH_CONNECT
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+        val success = gatt.writeCharacteristic(characteristic)
+        Log.d("BLE", "Device Model command write success: $success")
     }
 
     private fun requestBatteryStatus(gatt: BluetoothGatt, characteristic:
