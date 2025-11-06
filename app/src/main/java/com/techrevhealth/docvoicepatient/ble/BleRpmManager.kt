@@ -69,6 +69,23 @@ class BleRpmManager(
 
     fun getCurrentDeviceData(): RpmDeviceData? = currentDeviceData
 
+    /**
+     * Helper function to write characteristic
+     * Used by parsers to send commands
+     */
+    private fun writeCharacteristic(command: ByteArray, gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
+        characteristic.value = command
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.BLUETOOTH_CONNECT
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+        val success = gatt.writeCharacteristic(characteristic)
+        Log.d(TAG, "writeCharacteristic: Success=$success")
+    }
+
 
     val command = byteArrayOf(
         0x26.toByte(), // Command ID
@@ -403,18 +420,59 @@ class BleRpmManager(
     private fun connectToDevice(device: BluetoothDevice, deviceName: String) {
         connectedDeviceName = deviceName
         listener.onConnecting(deviceName)
+        
+        // Initialize appropriate parser based on device type
+        when {
+            deviceName.contains("TNG SPO2", ignoreCase = true) || 
+            deviceName.contains("FORA_SPO2", ignoreCase = true) -> {
+                Log.d(TAG, "Initializing SPO2 Parser")
+                spo2Parser = Spo2ResponseParser(
+                    deviceName = deviceName,
+                    onDataComplete = { data -> 
+                        currentDeviceData = data
+                        listener.onDataReceived(deviceName, data) 
+                    },
+                    writeCharacteristic = ::writeCharacteristic
+                )
+            }
+            deviceName.contains("FORA PREMIUM V10", ignoreCase = true) -> {
+                Log.d(TAG, "Initializing Glucose Parser")
+                glucoseParser = GlucoseResponseParser(
+                    deviceName = deviceName,
+                    onDataComplete = { data ->
+                        currentDeviceData = data
+                        listener.onDataReceived(deviceName, data)
+                    },
+                    writeCharacteristic = ::writeCharacteristic
+                )
+            }
+            deviceName.contains("FORA P20", ignoreCase = true) -> {
+                Log.d(TAG, "Initializing BP Parser")
+                bpParser = BpResponseParser(
+                    deviceName = deviceName,
+                    onDataComplete = { data ->
+                        currentDeviceData = data
+                        listener.onDataReceived(deviceName, data)
+                    }
+                )
+            }
+            deviceName.contains("TNG SCALE", ignoreCase = true) -> {
+                Log.d(TAG, "Initializing Weight Parser")
+                weightParser = WeightResponseParser(
+                    deviceName = deviceName,
+                    onDataComplete = { data ->
+                        currentDeviceData = data
+                        listener.onDataReceived(deviceName, data)
+                    }
+                )
+            }
+        }
+        
         if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.BLUETOOTH_CONNECT
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
             return
         }
         connectedGatt = device.connectGatt(context, false, gattCallback)
@@ -577,40 +635,36 @@ class BleRpmManager(
 
         override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
             Log.d(TAG, "onCharacteristicChanged: Value "+characteristic.value)
-            Log.d(TAG, "onCharacteristicChanged: Properties "+characteristic.properties.toString())
             val data = characteristic.value ?: return
+            
             if (ActivityCompat.checkSelfPermission(
                     context,
                     Manifest.permission.BLUETOOTH_CONNECT
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
                 return
             }
+            
             val deviceName = gatt.device.name ?: "UNKNOWN"
+            Log.d(TAG, "onCharacteristicChanged: Device=$deviceName, CMD=0x${String.format("%02X", data.getOrNull(1) ?: 0)}")
 
-            when (deviceName.uppercase()) {
-                "TNG SPO2", "FORA_SPO2" -> {
-                    parseForaSpo2Data(data,gatt,characteristic)
+            // Route to appropriate parser
+            when {
+                deviceName.contains("TNG SPO2", ignoreCase = true) ||
+                deviceName.contains("FORA_SPO2", ignoreCase = true) -> {
+                    spo2Parser?.parseResponse(data, gatt, characteristic)
                 }
-                "FORA P20" -> {
-                    parseBpMonitorData(data,gatt,characteristic)
+                deviceName.contains("FORA PREMIUM V10", ignoreCase = true) -> {
+                    glucoseParser?.parseResponse(data, gatt, characteristic)
                 }
-                "FORA PREMIUM V10" -> {
-                    parseGlucoseData(data,gatt,characteristic)
+                deviceName.contains("FORA P20", ignoreCase = true) -> {
+                    bpParser?.parseResponse(data, gatt, characteristic)
                 }
-                "TNG SCALE" -> {
-                    parseWeightData(data,gatt,characteristic)
+                deviceName.contains("TNG SCALE", ignoreCase = true) -> {
+                    weightParser?.parseResponse(data, gatt, characteristic)
                 }
-                else -> Log.w("BLE", "Unknown device: $deviceName, Raw data: ${data.joinToString()}")
+                else -> Log.w(TAG, "Unknown device: $deviceName, Raw data: ${data.joinToString()}")
             }
-            //stop()
         }
 
 
@@ -630,35 +684,49 @@ class BleRpmManager(
             descriptor: BluetoothGattDescriptor?,
             status: Int
         ) {
-            Log.d("BLE", "Descriptor write status: $status")
+            Log.d(TAG, "Descriptor write status: $status")
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                Log.d("BLE", "Descriptor write succeeded $connectedDeviceName")
+                Log.d(TAG, "Descriptor write succeeded for $connectedDeviceName")
 
                 val characteristic = descriptor?.characteristic
                 characteristic?.writeType = BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
-                characteristic?.setValue(chooseReadCommand())
+                
+                // Send initial command based on device type
+                val initialCommand = when {
+                    connectedDeviceName?.contains("TNG SPO2", ignoreCase = true) == true ||
+                    connectedDeviceName?.contains("FORA_SPO2", ignoreCase = true) == true -> {
+                        Spo2Commands.clearMemory()
+                    }
+                    connectedDeviceName?.contains("FORA PREMIUM V10", ignoreCase = true) == true -> {
+                        GlucoseCommands.clearMemory()
+                    }
+                    connectedDeviceName?.contains("FORA P20", ignoreCase = true) == true -> {
+                        BpCommands.readBpValue()
+                    }
+                    connectedDeviceName?.contains("TNG SCALE", ignoreCase = true) == true -> {
+                        WeightCommands.readWeightData()
+                    }
+                    else -> ByteArray(0)
+                }
+                
+                characteristic?.value = initialCommand
+                
                 if (ActivityCompat.checkSelfPermission(
                         context,
                         Manifest.permission.BLUETOOTH_CONNECT
                     ) != PackageManager.PERMISSION_GRANTED
                 ) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
                     return
                 }
+                
                 CoroutineScope(Dispatchers.IO).launch {
                     delay(100)
                 }
                 val success = gatt?.writeCharacteristic(characteristic)
-                Log.d(TAG, "onDescriptorWrite: Success Write $success")
+                Log.d(TAG, "Initial command write: Success=$success")
 
             } else {
-                Log.e("BLE", "Descriptor write failed with status $status")
+                Log.e(TAG, "Descriptor write failed with status $status")
             }
         }
 
