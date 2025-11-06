@@ -58,6 +58,7 @@ class BleRpmManager(
     private val handler = Handler(Looper.getMainLooper())
 
     private var currentDeviceData: RpmDeviceData? = null
+    private var accumulatedDeviceData: RpmDeviceData? = null
 
     fun getCurrentDeviceData(): RpmDeviceData? = currentDeviceData
 
@@ -97,7 +98,7 @@ class BleRpmManager(
             0x51.toByte(), // Start byte
             0x71.toByte(), // Command for reading weight data
             0x02.toByte(), // Data for device type, etc.
-            0x00.toByte(), // Additional data byte
+            0x01.toByte(), // Additional data byte
             0x00.toByte(), // Placeholder data byte
             0xA3.toByte(), // Stop byte
             0x00.toByte()  // Placeholder for checksum
@@ -245,7 +246,20 @@ class BleRpmManager(
     private fun buildSerialCommand(): ByteArray {
         val command = byteArrayOf(
             0x51.toByte(),
-            0x27.toByte(), // Read device status
+            0x27.toByte(), // Read serial number
+            0x00, 0x00, 0x00, 0x00,
+            0xA3.toByte(),
+            0x00
+        )
+        command[7] = calculateChecksum(command)
+        return command
+    }
+
+    // Battery + System Info
+    private fun buildBatteryCommand(): ByteArray {
+        val command = byteArrayOf(
+            0x51.toByte(),
+            0x4F.toByte(), // Read battery and firmware
             0x00, 0x00, 0x00, 0x00,
             0xA3.toByte(),
             0x00
@@ -798,9 +812,11 @@ class BleRpmManager(
             when (data[1].toInt() and 0xFF) {
                 0x52 -> {
                     Log.d(TAG, "parseForaSpo2Data: Clear Memory Response")
-                    // Wait and send read command
+                    // Initialize accumulated data for this device session
+                    accumulatedDeviceData = RpmDeviceData(deviceName = connectedDeviceName ?: "Unknown")
+                    // Wait and send serial number command first
                     Handler(Looper.getMainLooper()).postDelayed({
-                        requestReadCommand(gatt, characteristic)
+                        requestSerialStatus(gatt, characteristic)
                     }, 700) // delay must be >= 600ms to be safe
                 }
                 0x27 -> {
@@ -812,35 +828,56 @@ class BleRpmManager(
                         data[2],
                         data[3]
                     )
-                    currentDeviceData = RpmDeviceData(
+                    // Accumulate serial number
+                    accumulatedDeviceData = accumulatedDeviceData?.copy(
+                        serialNumber = serial
+                    ) ?: RpmDeviceData(
                         deviceName = connectedDeviceName ?: "Unknown",
-                        serialNumber = serial)
+                        serialNumber = serial
+                    )
                     Log.d("FORA_SPO2", "serial: $serial ")
-                    // Wait and send read command
+                    // Wait and send battery command
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        requestBatteryStatus(gatt, characteristic)
+                    }, 700) // delay must be >= 600ms to be safe
+                }
+                0x4F -> {
+                    Log.d(TAG, "parseForaSpo2Data: battery")
+                    val battery = data[2].toInt() and 0xFF
+                    val firmware = data[4].toInt() and 0xFF
+                    // Accumulate battery and firmware
+                    accumulatedDeviceData = accumulatedDeviceData?.copy(
+                        battery = battery,
+                        firmware = firmware.toString()
+                    ) ?: RpmDeviceData(
+                        deviceName = connectedDeviceName ?: "Unknown",
+                        battery = battery,
+                        firmware = firmware.toString()
+                    )
+                    Log.d("FORA_SPO2", "Battery: $battery%, Firmware: $firmware")
+                    // Wait and send read data command
                     Handler(Looper.getMainLooper()).postDelayed({
                         requestReadCommand(gatt, characteristic)
-                    }, 2000) // delay must be >= 600ms to be safe
+                    }, 700) // delay must be >= 600ms to be safe
                 }
                 0x49 -> {
                     Log.d(TAG, "parseForaSpo2Data: Data: ")
                     val spo2 = data[2].toInt() and 0xFF
                     val pulse = data[5].toInt() and 0xFF
                     Log.d("FORA_SPO2", "SpO2: $spo2%, Heart Rate: $pulse bpm")
-                    currentDeviceData = RpmDeviceData(
+                    // Accumulate SpO2 and pulse data
+                    accumulatedDeviceData = accumulatedDeviceData?.copy(
+                        spo2 = spo2,
+                        pulse = pulse
+                    ) ?: RpmDeviceData(
                         deviceName = connectedDeviceName ?: "Unknown",
                         spo2 = spo2,
-                        pulse = pulse)
-                    stopDeviceStatus(gatt, characteristic) // Only if you're done
-                }
-                0x4F -> {
-                    Log.d(TAG, "parseForaSpo2Data: battery")
-                    val battery = data[2].toInt() and 0xFF
-                    val firmware = data[4].toInt() and 0xFF
-                    currentDeviceData = RpmDeviceData(
-                        deviceName = connectedDeviceName ?: "Unknown",
-                        battery = battery,
-                        firmware = firmware.toString())
-                    Log.d("FORA_SPO2", "Battery: $battery%, Firmware: $firmware")
+                        pulse = pulse
+                    )
+                    // Set current device data to accumulated data
+                    currentDeviceData = accumulatedDeviceData
+                    // Now we have all the data, stop the device
+                    stopDeviceStatus(gatt, characteristic)
                 }
 
 
@@ -853,24 +890,32 @@ class BleRpmManager(
 
     private fun requestSerialStatus(gatt: BluetoothGatt, characteristic:
     BluetoothGattCharacteristic) {
-        val batteryCommand = buildSerialCommand()
+        val serialCommand = buildSerialCommand()
+        characteristic.value = serialCommand
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.BLUETOOTH_CONNECT
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+        val success = gatt.writeCharacteristic(characteristic)
+        Log.d("BLE", "Serial Number command write success: $success")
+    }
+
+    private fun requestBatteryStatus(gatt: BluetoothGatt, characteristic:
+    BluetoothGattCharacteristic) {
+        val batteryCommand = buildBatteryCommand()
         characteristic.value = batteryCommand
         if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.BLUETOOTH_CONNECT
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
             return
         }
         val success = gatt.writeCharacteristic(characteristic)
-        Log.d("BLE", "Serial Number command write success: $success")
+        Log.d("BLE", "Battery command write success: $success")
     }
 
     private fun requestReadCommand(gatt: BluetoothGatt, characteristic:
