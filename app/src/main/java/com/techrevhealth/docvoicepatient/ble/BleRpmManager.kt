@@ -851,11 +851,30 @@ class BleRpmManager(
 
         if (data.isNotEmpty()) {
             when (data[1].toInt() and 0xFF) {
-                0x52 -> {
-                    Log.d(TAG, "parseForaSpo2Data: Clear Memory Response")
-                    // Initialize accumulated data for this device session
-                    accumulatedDeviceData = RpmDeviceData(deviceName = connectedDeviceName ?: "Unknown")
-                    // Wait and send device model command first
+                0x23 -> {
+                    Log.d(TAG, "parseForaSpo2Data: Clock Time")
+                    try {
+                        // Parse date/time per PDF Table A and B
+                        val data0 = data[0].toInt() and 0xFF
+                        val data1 = data[1].toInt() and 0xFF
+                        val minute = data[2].toInt() and 0x3F  // 6-bit
+                        val hour = data[3].toInt() and 0x1F    // 5-bit
+                        
+                        // Table A: Day+Month+Year encoding
+                        val day = data0 and 0x1F  // bits 0-4
+                        val month = ((data0 shr 5) and 0x07) or ((data1 and 0x01) shl 3)  // bits 5-7 of data0 + bit 0 of data1
+                        val year = ((data1 shr 1) and 0x7F) + 2000  // bits 1-7 of data1, add 2000
+                        
+                        val timestamp = String.format("%04d-%02d-%02d %02d:%02d", year, month, day, hour, minute)
+                        Log.d("FORA_SPO2", "Measurement Time: $timestamp")
+                        
+                        // Initialize accumulated data with timestamp
+                        accumulatedDeviceData = RpmDeviceData(deviceName = connectedDeviceName ?: "Unknown")
+                        // Store timestamp - you may want to add this field to RpmDeviceData
+                    } catch (e: Exception) {
+                        Log.w("FORA_SPO2", "Failed to parse clock time: ${e.message}")
+                    }
+                    // Send device model command next
                     Handler(Looper.getMainLooper()).postDelayed({
                         requestDeviceModel(gatt, characteristic)
                     }, 700) // delay must be >= 600ms to be safe
@@ -942,33 +961,6 @@ class BleRpmManager(
                         Log.d("FORA_SPO2", "Battery: $battery%, Firmware: $firmware (EXPERIMENTAL)")
                     } catch (e: Exception) {
                         Log.w("FORA_SPO2", "0x4F battery command failed (expected - undocumented): ${e.message}")
-                    }
-                    // Send 0x23 command to get measurement date/time
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        requestClockTime(gatt, characteristic)
-                    }, 700) // delay must be >= 600ms to be safe
-                }
-                0x23 -> {
-                    Log.d(TAG, "parseForaSpo2Data: Clock Time")
-                    try {
-                        // Parse date/time per PDF Table A and B
-                        val data0 = data[0].toInt() and 0xFF
-                        val data1 = data[1].toInt() and 0xFF
-                        val minute = data[2].toInt() and 0x3F  // 6-bit
-                        val hour = data[3].toInt() and 0x1F    // 5-bit
-                        
-                        // Table A: Day+Month+Year encoding
-                        val day = data0 and 0x1F  // bits 0-4
-                        val month = ((data0 shr 5) and 0x07) or ((data1 and 0x01) shl 3)  // bits 5-7 of data0 + bit 0 of data1
-                        val year = ((data1 shr 1) and 0x7F) + 2000  // bits 1-7 of data1, add 2000
-                        
-                        val timestamp = String.format("%04d-%02d-%02d %02d:%02d", year, month, day, hour, minute)
-                        Log.d("FORA_SPO2", "Measurement Time: $timestamp")
-                        
-                        // Store timestamp - you may want to add this field to RpmDeviceData
-                        // For now, logging it
-                    } catch (e: Exception) {
-                        Log.w("FORA_SPO2", "Failed to parse clock time: ${e.message}")
                     }
                     // Send 0x49 command directly to get SpO2/Pulse data
                     val readCommand = buildReadCommand()
@@ -1113,7 +1105,7 @@ class BleRpmManager(
 
     private fun chooseReadCommand(): ByteArray {
         if (connectedDeviceName.equals(RpmDeviceType.TNG_SPO2.displayName, true)) {
-            return clearMemoryCommand()
+            return buildClockTimeCommand()  // Start with clock time instead of clear memory
         }else if (connectedDeviceName.equals(RpmDeviceType.FORA_PREMIUM_V10.displayName,true)){
             return buildReadGlucoseResultCommand()
         }else if (connectedDeviceName.equals(RpmDeviceType.FORA_P20.displayName,true)){
