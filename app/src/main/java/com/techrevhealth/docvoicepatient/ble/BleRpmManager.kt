@@ -246,7 +246,20 @@ class BleRpmManager(
     private fun buildSerialCommand(): ByteArray {
         val command = byteArrayOf(
             0x51.toByte(),
-            0x27.toByte(), // Read serial number
+            0x27.toByte(), // Read serial number part 1 (SN_0 ~ SN_3)
+            0x00, 0x00, 0x00, 0x00,
+            0xA3.toByte(),
+            0x00
+        )
+        command[7] = calculateChecksum(command)
+        return command
+    }
+
+    // Read serial number part 2
+    private fun buildSerialCommand2(): ByteArray {
+        val command = byteArrayOf(
+            0x51.toByte(),
+            0x28.toByte(), // Read serial number part 2 (SN_4 ~ SN_7)
             0x00, 0x00, 0x00, 0x00,
             0xA3.toByte(),
             0x00
@@ -814,28 +827,54 @@ class BleRpmManager(
                     Log.d(TAG, "parseForaSpo2Data: Clear Memory Response")
                     // Initialize accumulated data for this device session
                     accumulatedDeviceData = RpmDeviceData(deviceName = connectedDeviceName ?: "Unknown")
-                    // Wait and send serial number command first
+                    // Wait and send serial number part 2 command first (gets first half SN_4~SN_7)
                     Handler(Looper.getMainLooper()).postDelayed({
-                        requestSerialStatus(gatt, characteristic)
+                        requestSerialStatus2(gatt, characteristic)
                     }, 700) // delay must be >= 600ms to be safe
                 }
-                0x27 -> {
-                    Log.d(TAG, "parseForaSpo2Data: SerialNumber: ")
-                    val serial = String.format(
+                0x28 -> {
+                    Log.d(TAG, "parseForaSpo2Data: SerialNumber Part 2 (SN_4~SN_7)")
+                    val serial2 = String.format(
                         "%02X%02X%02X%02X",
                         data[0],
                         data[1],
                         data[2],
                         data[3]
                     )
-                    // Accumulate serial number
+                    // Store the first half temporarily
                     accumulatedDeviceData = accumulatedDeviceData?.copy(
-                        serialNumber = serial
+                        firmware = serial2  // Temporarily store in firmware field
                     ) ?: RpmDeviceData(
                         deviceName = connectedDeviceName ?: "Unknown",
-                        serialNumber = serial
+                        firmware = serial2
                     )
-                    Log.d("FORA_SPO2", "serial: $serial ")
+                    Log.d("FORA_SPO2", "Serial Part 2 (first half): $serial2")
+                    // Wait and send serial number part 1 command
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        requestSerialStatus(gatt, characteristic)
+                    }, 700) // delay must be >= 600ms to be safe
+                }
+                0x27 -> {
+                    Log.d(TAG, "parseForaSpo2Data: SerialNumber Part 1 (SN_0~SN_3)")
+                    val serial1 = String.format(
+                        "%02X%02X%02X%02X",
+                        data[0],
+                        data[1],
+                        data[2],
+                        data[3]
+                    )
+                    // Combine with the first half to get complete 16-character serial
+                    val serial2 = accumulatedDeviceData?.firmware ?: ""  // Get temporarily stored first half
+                    val completeSerial = serial2 + serial1  // Example: "32502102" + "4013102A"
+                    // Accumulate complete serial number
+                    accumulatedDeviceData = accumulatedDeviceData?.copy(
+                        serialNumber = completeSerial,
+                        firmware = null  // Clear temporary storage
+                    ) ?: RpmDeviceData(
+                        deviceName = connectedDeviceName ?: "Unknown",
+                        serialNumber = completeSerial
+                    )
+                    Log.d("FORA_SPO2", "Complete Serial Number: $completeSerial")
                     // Wait and send battery command
                     Handler(Looper.getMainLooper()).postDelayed({
                         requestBatteryStatus(gatt, characteristic)
@@ -900,7 +939,22 @@ class BleRpmManager(
             return
         }
         val success = gatt.writeCharacteristic(characteristic)
-        Log.d("BLE", "Serial Number command write success: $success")
+        Log.d("BLE", "Serial Number Part 1 command write success: $success")
+    }
+
+    private fun requestSerialStatus2(gatt: BluetoothGatt, characteristic:
+    BluetoothGattCharacteristic) {
+        val serialCommand = buildSerialCommand2()
+        characteristic.value = serialCommand
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.BLUETOOTH_CONNECT
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+        val success = gatt.writeCharacteristic(characteristic)
+        Log.d("BLE", "Serial Number Part 2 command write success: $success")
     }
 
     private fun requestBatteryStatus(gatt: BluetoothGatt, characteristic:
