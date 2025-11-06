@@ -860,7 +860,7 @@ class BleRpmManager(
                         deviceModel = modelString
                     )
                     Log.d("FORA_SPO2", "Device Model Code: $modelCode")
-                    // Wait and send serial number part 2 command
+                    // Wait and send serial number part 2 command (0x28 - first half SN_4~7)
                     Handler(Looper.getMainLooper()).postDelayed({
                         requestSerialStatus2(gatt, characteristic)
                     }, 700) // delay must be >= 600ms to be safe
@@ -882,7 +882,7 @@ class BleRpmManager(
                         firmware = serial2
                     )
                     Log.d("FORA_SPO2", "Serial Part 2 (first half): $serial2")
-                    // Wait and send serial number part 1 command
+                    // Wait and send serial number part 1 command (0x27 - second half SN_0~3)
                     Handler(Looper.getMainLooper()).postDelayed({
                         requestSerialStatus(gatt, characteristic)
                     }, 700) // delay must be >= 600ms to be safe
